@@ -1,0 +1,8 @@
+{
+  "name": "MEAT PRO version 2.0",
+  "description": "Enterprise Web System for MEAT PRO\nระบบจัดการโรงงานผลิตไส้กรอก และสินค้าจากเนื้อสัตว์",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
+}
