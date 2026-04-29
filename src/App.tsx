@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import SecurityOverlay from './components/shared/SecurityOverlay';
 
 // Pages
 import Login from './pages/Login';
@@ -19,6 +20,7 @@ import AccessLogs from './pages/AccessLogs';
 export default function App() {
   return (
     <AuthProvider>
+      <SecurityOverlay />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />

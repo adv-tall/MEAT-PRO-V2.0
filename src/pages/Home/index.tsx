@@ -379,7 +379,7 @@ export default function Home() {
         return () => window.removeEventListener('sysConfigUpdate', loadConfig);
     }, []);
 
-    const isDev = user?.role === 'Developer' || currentUser.position === 'Lead Developer';
+    const isDev = user?.isDev === true;
 
     const visibleModules = SYSTEM_MODULES.filter(mod => {
         // If Dev, they see everything logically allowed

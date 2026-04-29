@@ -165,7 +165,7 @@ export default function Login() {
                       type="text"
                       required
                       className="block w-full bg-white/40 border border-white/60 rounded-xl py-3.5 pl-12 pr-4 text-[14px] font-bold text-slate-800 placeholder:text-slate-500/60 focus:bg-white/70 focus:border-white focus:ring-2 focus:ring-white/50 outline-none transition-all shadow-inner"
-                      placeholder="e.g., U001 or demo"
+                      placeholder="e.g., DEMO"
                       value={employeeId}
                       onChange={(e) => setEmployeeId(e.target.value)}
                     />
@@ -184,7 +184,7 @@ export default function Login() {
                       type={showIdCard ? "text" : "password"}
                       required
                       className="block w-full bg-white/40 border border-white/60 rounded-xl py-3.5 pl-12 pr-12 text-[14px] font-bold text-slate-800 placeholder:text-slate-500/60 focus:bg-white/70 focus:border-white focus:ring-2 focus:ring-white/50 outline-none transition-all shadow-inner"
-                      placeholder="13 digits or demo"
+                      placeholder="e.g., DEMO123456789"
                       value={idCard}
                       onChange={(e) => setIdCard(e.target.value)}
                     />
@@ -226,7 +226,7 @@ export default function Login() {
               
               <div className="mt-8 rounded-xl bg-white/60 p-5 text-center shadow-inner border border-white/60 backdrop-blur-sm">
                 <div className="font-bold text-[#1a2035] text-[13px] mb-1.5">Demo Credentials</div>
-                <div className="text-[13px] font-semibold text-slate-700">User: demo / Pass: demo</div>
+                <div className="text-[13px] font-semibold text-slate-700">User: DEMO / Pass: DEMO123456789</div>
               </div>
             </form>
           </motion.div>

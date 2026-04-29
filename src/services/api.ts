@@ -60,25 +60,29 @@ const mockResponse = async (action: string, data: any): Promise<ApiResponse> => 
   await new Promise(resolve => setTimeout(resolve, 800));
   
   if (action === 'login') {
-    if ((data.employeeId === 'demo' && data.idCard === 'demo') || 
-        (data.employeeId === 'U001' && data.idCard === '1234567890123') ||
-        (data.employeeId === 'U002' && data.idCard === '1234567890123')) {
-      const isDemo = data.employeeId === 'demo';
-      const isDev = data.employeeId === 'U001';
+    if (data.employeeId === 'DEV001' && data.idCard === '1234567890123') {
       return {
         status: 'success',
         data: {
-          id: isDemo ? '3' : (isDev ? '1' : '2'),
-          employeeId: data.employeeId,
-          name: isDemo ? 'Demo User' : (isDev ? 'Developer' : 'Administrator'),
-          role: isDemo ? 'Viewer' : (isDev ? 'Developer' : 'Administrator'),
+          id: '4', employeeId: 'DEV001', name: 'T-DCC Developer', role: 'Super Admin',
           avatar: 'https://drive.google.com/thumbnail?id=1Z_fRbN9S4aA7OkHb3mlim_t60wIT4huY&sz=w400',
-          permissions: {
-            canCreate: !isDemo,
-            canEdit: !isDemo,
-            canApprove: !isDemo,
-            canVerify: !isDemo,
-          }
+          isDev: true, permissions: { canCreate: true, canEdit: true, canApprove: true, canVerify: true }
+        }
+      };
+    } else if (data.employeeId === 'U001' && data.idCard === 'ADMIN12345678') {
+      return {
+        status: 'success',
+        data: {
+          id: '5', employeeId: 'U001', name: 'Demo User 1', role: 'Admin', avatar: '',
+          isDev: false, permissions: { canCreate: true, canEdit: true, canApprove: true, canVerify: true }
+        }
+      };
+    } else if (data.employeeId === 'DEMO' && data.idCard === 'DEMO123456789') {
+      return {
+        status: 'success',
+        data: {
+          id: '6', employeeId: 'DEMO', name: 'Demo Operator', role: 'Operator', avatar: '',
+          isDev: false, permissions: {}
         }
       };
     }

@@ -39,11 +39,14 @@ function setupDatabase() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetsConfig = GLOBAL_SHEETS_CONFIG;
 
+  // 1. สร้างชีทละเคลียร์ข้อมูล ใส่หัวตาราง
   for (let name in sheetsConfig) {
     let sheet = ss.getSheetByName(name);
     if (!sheet) {
       sheet = ss.insertSheet(name);
     }
+    sheet.clear();
+    
     // ตั้งค่าหัวตาราง (Headers)
     const headers = sheetsConfig[name];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers])
@@ -54,17 +57,78 @@ function setupDatabase() {
     // Freeze แถวแรก
     sheet.setFrozenRows(1);
     
-    // Auto-resize คอลัมน์
-    sheet.autoResizeColumns(1, headers.length);
+    // Auto-resize คอลัมน์ (ข้ามไปก่อนเพื่อความรวดเร็ว)
+    // sheet.autoResizeColumns(1, headers.length);
   }
 
-  // สร้าง User ตัวอย่างสำหรับ Admin (ถ้ายังไม่มี)
+  // ส่งคำสั่งอัปเดตโครงสร้างขึ้น Google Sheets ก่อนใส่ข้อมูล
+  SpreadsheetApp.flush();
+
+  // --- MOCK DATA INJECTION ---
+  
+  // 1. Users Mock
   const userSheet = ss.getSheetByName("Users");
-  if (userSheet.getLastRow() === 1) {
-    userSheet.appendRow(['1', 'ADMIN001', '1234', 'System Admin', 'Admin', '{"canCreate":true,"canEdit":true,"canApprove":true,"canVerify":true}', 'Director', 'admin@hrsystem.com', '', 'true', 'Active']);
-  }
+  const defaultPerms = '{"canCreate":true,"canEdit":true,"canApprove":true,"canVerify":true}';
+  const mockUsers = [
+    ['1', 'ADMIN001', '1234', 'System Admin', 'Admin', defaultPerms, 'Director', 'admin@hrsystem.com', '', 'false', 'Active'],
+    ['2', 'M101', '1234', 'สมชาย ใจดี', 'Operator', '{}', 'Mixing', '', '', 'false', 'Active'],
+    ['3', 'F201', '1234', 'สมหญิง รักษา', 'Operator', '{}', 'Forming', '', '', 'false', 'Active'],
+    ['4', 'DEV001', '1234567890123', 'T-DCC Developer', 'Super Admin', defaultPerms, 'Lead Developer', 'tallintelligence.dcc@gmail.com', 'https://drive.google.com/thumbnail?id=1Z_fRbN9S4aA7OkHb3mlim_t60wIT4huY&sz=w400', 'true', 'Active'],
+    ['5', 'U001', 'ADMIN12345678', 'Demo User 1', 'Admin', defaultPerms, 'Developer', 'demo1@wms.com', 'https://drive.google.com/thumbnail?id=1Z_fRbN9S4aA7OkHb3mlim_t60wIT4huY&sz=w400', 'false', 'Active'],
+    ['6', 'DEMO', 'DEMO123456789', 'Demo Operator', 'Operator', '{}', 'Staff', 'demo2@wms.com', '', 'false', 'Active']
+  ];
+  userSheet.getRange(2, 1, mockUsers.length, mockUsers[0].length).setValues(mockUsers);
 
-  Logger.log("Database Setup Complete!");
+  // 2. ProductionPlanning Mock
+  const planSheet = ss.getSheetByName("ProductionPlanning");
+  const mockPlans = [
+    ['1', 'PLN-101', 'FG-SMC-001', 'Smoked Sausage (Standard) 1kg', 'Sausage', 1000, 12000, 12000, 'SFG-SMC-001', 'In Progress'],
+    ['2', 'PLN-102', 'FG-CHE-009', 'Cheese Sausage Lava 500g', 'Sausage', 500, 8000, 16000, 'SFG-CHE-009', 'Pending'],
+    ['3', 'PLN-103', 'FG-MTB-002', 'Pork Meatball Grade A 1kg', 'Meatball', 1000, 20000, 20000, 'SFG-MTB-002', 'Pending'],
+    ['4', 'PLN-104', 'FG-HAM-005', 'Ham Block Sliced 200g', 'Ham', 200, 5000, 25000, 'SFG-HAM-005', 'Draft'],
+    ['5', 'PLN-105', 'FG-FRN-003', 'Chicken Frank 500g', 'Sausage', 500, 15000, 30000, 'SFG-FRN-003', 'Completed']
+  ];
+  planSheet.getRange(2, 1, mockPlans.length, mockPlans[0].length).setValues(mockPlans);
+
+  // 3. MixingBoard Mock
+  const mixingSheet = ss.getSheetByName("MixingBoard");
+  const mockMixing = [
+    ['1', '2026-04-29', 'SFG-SMC-001', 'SFG Smoked Sausage (Standard)', '1/120', 'Mixing Room 1', 150, 'Processing', new Date().toISOString()],
+    ['2', '2026-04-29', 'SFG-SMC-001', 'SFG Smoked Sausage (Standard)', '2/120', 'Mixing Room 1', 150, 'Processing', new Date().toISOString()],
+    ['3', '2026-04-29', 'SFG-MTB-002', 'SFG Pork Meatball Grade A', '5/200', 'Mixing Room 2', 150, 'Processing', new Date().toISOString()]
+  ];
+  mixingSheet.getRange(2, 1, mockMixing.length, mockMixing[0].length).setValues(mockMixing);
+
+  // 4. MasterItems Mock
+  const masterItemsSheet = ss.getSheetByName("MasterItems");
+  const mockItems = [
+    ['1', 'FG-SMC-001', 'Smoked Sausage (Standard) 1kg', 'FG', 'Sausage', 'BrandA', 1000, 50, 'Active', ''],
+    ['2', 'FG-CHE-009', 'Cheese Sausage Lava 500g', 'FG', 'Sausage', 'BrandB', 500, 25, 'Active', ''],
+    ['3', 'FG-MTB-002', 'Pork Meatball Grade A 1kg', 'FG', 'Meatball', 'BrandA', 1000, 100, 'Active', ''],
+    ['4', 'FG-HAM-005', 'Ham Block Sliced 200g', 'FG', 'Ham', 'BrandC', 200, 10, 'Active', ''],
+    ['5', 'FG-FRN-003', 'Chicken Frank 500g', 'FG', 'Sausage', 'BrandA', 500, 20, 'Active', ''],
+    ['6', 'FG-BKG-011', 'Bologna (Standard) 200g', 'FG', 'Bologna', 'BrandC', 200, 15, 'Active', ''],
+    ['7', 'FG-SMK-007', 'Smoked Chicken Breast 150g', 'FG', 'Chicken', 'BrandB', 150, 12, 'Active', ''],
+    ['8', 'SFG-SMC-001', 'SFG Smoked Sausage (Standard)', 'SFG', 'Sausage', 'Internal', 1000, null, 'Active', ''],
+    ['9', 'SFG-CHE-009', 'SFG Cheese Sausage Lava', 'SFG', 'Sausage', 'Internal', 1000, null, 'Active', ''],
+    ['10', 'SFG-MTB-002', 'SFG Pork Meatball Grade A', 'SFG', 'Meatball', 'Internal', 1000, null, 'Active', ''],
+    ['11', 'RM-PRK-001', 'Pork Trim 80/20', 'RM', 'Meat', 'SupplierX', 5000, null, 'Active', ''],
+    ['12', 'RM-CHK-002', 'Chicken Breast', 'RM', 'Meat', 'SupplierY', 5000, null, 'Active', '']
+  ];
+  masterItemsSheet.getRange(2, 1, mockItems.length, mockItems[0].length).setValues(mockItems);
+
+  // ลบ Sheet1 เริ่มต้นที่ไม่ได้ใช้
+  const sheet1 = ss.getSheetByName('Sheet1') || ss.getSheetByName('แผ่นที่ 1');
+  if (sheet1) ss.deleteSheet(sheet1);
+
+  SpreadsheetApp.flush();
+  Logger.log("Database Setup Complete! All sheets configured and Mock Data injected.");
+  
+  try {
+    ss.toast("✅ โครงสร้างชีทและ Mock Data ติดตั้งสำเร็จเรียบร้อย!", "Setup Complete", 5);
+  } catch (e) {
+    // Ignore in case running from isolated trigger without UI
+  }
 }
 
 function doOptions(e) {
