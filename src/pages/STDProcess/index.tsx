@@ -267,7 +267,7 @@ export default function STDProcess() {
                                             </span>
                                         </td>
                                         <td className="py-3 px-6 text-right">
-                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex justify-end gap-0.5 transition-opacity">
                                                 <button className="sys-btn-action">
                                                     <Icons.Eye size={14} />
                                                 </button>

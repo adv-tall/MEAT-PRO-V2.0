@@ -459,7 +459,7 @@ export default function ProCalendar() {
       </DraggableModal>
 
       {/* User Guide Drawer */}
-      {isGuideOpen && typeof document !== 'undefined' && createPortal(
+      {isGuideOpen && (
         <div className="fixed inset-0 z-[600] flex justify-end">
             <div className="absolute inset-0 bg-[#141A26]/20 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-auto" onClick={() => setIsGuideOpen(false)} />
             <div className="relative w-[400px] bg-white shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-300">
@@ -492,8 +492,7 @@ export default function ProCalendar() {
                     <button onClick={() => setIsGuideOpen(false)} className="px-8 py-3 bg-[#141A26] text-white font-black rounded-lg uppercase font-mono text-[11px] hover:bg-[#4F868C] transition-all shadow-sm">เข้าใจแล้ว (Got It)</button>
                 </div>
             </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   );

@@ -136,22 +136,22 @@ export default function EquipmentRegistry() {
                                     {activeTab === 'equipment' ? (
                                         filteredEquipment.map((item: any) => (
                                             <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                                                <td className="py-3 px-6 font-mono font-bold text-accent text-sm">{item.id}</td>
-                                                <td className="py-3 px-6 font-bold text-primary">{item.name}</td>
-                                                <td className="py-3 px-6"><span className="sys-badge bg-slate-100 text-slate-500 border-slate-200">{item.step}</span></td>
-                                                <td className="py-3 px-6 font-mono text-center font-bold text-primary">{item.qty}</td>
-                                                <td className="py-3 px-6 text-slate-500 text-xs">{item.note}</td>
+                                                <td className="py-3 px-6 font-mono font-bold text-accent text-[12px] sys-table-td">{item.id}</td>
+                                                <td className="py-3 px-6 font-bold text-primary text-[12px] sys-table-td">{item.name}</td>
+                                                <td className="py-3 px-6 sys-table-td"><span className="sys-badge bg-slate-100 text-slate-500 border-slate-200 text-[12px]">{item.step}</span></td>
+                                                <td className="py-3 px-6 font-mono text-center font-bold text-primary text-[12px] sys-table-td">{item.qty}</td>
+                                                <td className="py-3 px-6 text-slate-500 text-[12px] sys-table-td">{item.note}</td>
                                             </tr>
                                         ))
                                     ) : (
                                         filteredBreakdowns.map((item: any) => (
                                             <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                                                <td className="py-3 px-6 text-xs text-primary font-mono text-sm leading-tight font-bold">{item.date} <br/><span className="text-slate-400 text-[10px]">{item.id}</span></td>
-                                                <td className="py-3 px-6 font-bold text-primary">{item.machineName}</td>
-                                                <td className="py-3 px-6 text-accent font-bold">{item.problem}</td>
-                                                <td className="py-3 px-6 font-mono text-right font-bold text-primary">{item.downtimeMinutes}</td>
-                                                <td className="py-3 px-6 text-center">
-                                                    <span className={`sys-badge ${item.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
+                                                <td className="py-3 px-6 text-primary font-mono text-[12px] leading-tight font-bold sys-table-td">{item.date} <br/><span className="text-slate-400 text-[10px]">{item.id}</span></td>
+                                                <td className="py-3 px-6 font-bold text-primary text-[12px] sys-table-td">{item.machineName}</td>
+                                                <td className="py-3 px-6 text-accent font-bold text-[12px] sys-table-td">{item.problem}</td>
+                                                <td className="py-3 px-6 font-mono text-right font-bold text-primary text-[12px] sys-table-td">{item.downtimeMinutes}</td>
+                                                <td className="py-3 px-6 text-center sys-table-td">
+                                                    <span className={`sys-badge text-[12px] ${item.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
                                                         {item.status}
                                                     </span>
                                                 </td>

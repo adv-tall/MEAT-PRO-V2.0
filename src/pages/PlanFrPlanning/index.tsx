@@ -1,5 +1,50 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import * as Icons from 'lucide-react';
+import UserGuideButton from '../../components/shared/UserGuideButton';
+
+function UserGuidePanel({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[600] flex justify-end">
+            <div className="absolute inset-0 bg-[#141A26]/20 backdrop-blur-sm animate-in fade-in pointer-events-auto" onClick={onClose} />
+            <div className="relative w-[400px] bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+                <div className="p-6 bg-[#141A26] flex items-center justify-between text-white shrink-0 border-b-4 border-[#F2B705]">
+                    <div className="flex items-center gap-3">
+                        <Icons.HelpCircle size={22} className="text-[#F2B705]" />
+                        <h3 className="text-sm font-extrabold uppercase tracking-widest font-mono">PLANNING GUIDE</h3>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 text-white/50 hover:bg-white/10 hover:text-white rounded-full transition-colors">
+                        <Icons.X size={20} />
+                    </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-8 space-y-8 text-[#3F4859] relative bg-[#F2F0EB] text-[12px]">
+                    <section>
+                      <h4 className="font-black text-[#141A26] border-b border-[#4F868C]/10 pb-2 mb-4 flex items-center gap-2 font-mono uppercase tracking-widest text-sm">
+                        <span className="bg-[#141A26] text-white w-5 h-5 rounded flex items-center justify-center text-[10px]">1</span> 
+                        ข้อมูลการขายรอประเมิน
+                      </h4>
+                      <p className="text-[13px] leading-relaxed">ใบสั่งขาย (Sales Order) จากออฟฟิศที่รอการจับคู่กับกำลังการผลิต (Capacity) เพื่อนำมาสร้างเป็นตารางการผลิต (Production Plan)</p>
+                    </section>
+                    <section>
+                      <h4 className="font-black text-[#141A26] border-b border-[#4F868C]/10 pb-2 mb-4 flex items-center gap-2 font-mono uppercase tracking-widest text-sm">
+                        <span className="bg-[#D91604] text-white w-5 h-5 rounded flex items-center justify-center text-[10px]">2</span> 
+                        สถานะ (Status)
+                      </h4>
+                      <ul className="space-y-3">
+                          <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#737597] mt-1.5 shrink-0"></span><span className="text-[13px]"><b>DRAFT</b>: ร่างแผน ยังไม่ได้รับการยืนยัน</span></li>
+                          <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#3A7283] mt-1.5 shrink-0"></span><span className="text-[13px]"><b>CONFIRMED</b>: แผนผลิตยืนยันแล้ว รอเข้าสายการผลิต</span></li>
+                          <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#B06821] mt-1.5 shrink-0"></span><span className="text-[13px]"><b>IN PROCESS</b>: กำลังดำเนินการผลิตจริง</span></li>
+                          <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] mt-1.5 shrink-0"></span><span className="text-[13px]"><b>COMPLETED</b>: ปิดแผนการผลิตแล้ว</span></li>
+                      </ul>
+                    </section>
+                </div>
+                <div className="p-6 bg-white shrink-0 flex justify-end border-t border-[#4F868C]/10">
+                    <button onClick={onClose} className="px-8 py-3 bg-[#141A26] text-white rounded-lg font-black text-[11px] uppercase shadow-sm font-mono text-thai hover:bg-[#D91604] transition-all">เข้าใจแล้ว (Got It)</button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // --- MOCK DATABASE ---
 const MOCK_PL_DATA = Array.from({ length: 45 }).map((_, i) => ({
@@ -38,6 +83,7 @@ const getPriorityStyle = (priority: string) => {
 };
 
 export default function PlanFrPlanning() {
+    const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [currentPage, setCurrentPage] = useState(1);
@@ -85,6 +131,9 @@ export default function PlanFrPlanning() {
 
     return (
         <div className="w-full relative flex flex-col h-full min-h-0">
+            <UserGuideButton onClick={() => setIsGuideOpen(true)} className="bg-[#141A26] text-white hover:bg-[#D91604]" />
+            <UserGuidePanel isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+            
             {/* Header Area */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0 animate-fadeIn pb-6">
                 <div className="flex items-center gap-4">
@@ -260,7 +309,7 @@ export default function PlanFrPlanning() {
                                             </span>
                                         </td>
                                         <td className="py-3 px-6 text-right">
-                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex justify-end gap-0.5 transition-opacity">
                                                 <button className="sys-btn-action">
                                                     <Icons.Eye size={14} />
                                                 </button>

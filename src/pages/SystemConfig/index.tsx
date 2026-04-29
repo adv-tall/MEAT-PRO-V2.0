@@ -299,7 +299,7 @@ export default function SystemConfig() {
                             <span className="font-black text-[#D91604] text-[11px] font-mono">{item.revision}</span>
                           </td>
                           <td className="py-3 px-6 pr-8 align-middle text-center">
-                            <div className="flex justify-center items-center gap-2">
+                            <div className="flex justify-center items-center gap-0.5">
                               <button onClick={() => handleOpenModal(item)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#4F868C]/20 text-[#4F868C] hover:border-[#F2B705] hover:text-white hover:bg-[#F2B705] transition-colors shadow-sm bg-white" title="Edit">
                                 <Icons.Pencil size={14} />
                               </button>
@@ -348,7 +348,7 @@ export default function SystemConfig() {
                             <span className="text-[10px] text-[#4F868C] italic">{item.note}</span>
                           </td>
                           <td className="py-3 px-6 pr-8 align-middle text-center">
-                            <div className="flex justify-center items-center gap-2">
+                            <div className="flex justify-center items-center gap-0.5">
                               <button onClick={() => handleOpenModal(item)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#4F868C]/20 text-[#4F868C] hover:border-[#F2B705] hover:text-white hover:bg-[#F2B705] transition-colors shadow-sm bg-white" title="Edit">
                                 <Icons.Pencil size={14} />
                               </button>
@@ -387,7 +387,7 @@ export default function SystemConfig() {
                             </td>
                           )}
                           <td className="py-3 px-6 pr-8 align-middle text-center">
-                            <div className="flex justify-center items-center gap-2">
+                            <div className="flex justify-center items-center gap-0.5">
                               <button onClick={() => handleOpenModal(item)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#4F868C]/20 text-[#4F868C] hover:border-[#F2B705] hover:text-white hover:bg-[#F2B705] transition-colors shadow-sm bg-white" title="Edit">
                                 <Icons.Pencil size={14} />
                               </button>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import * as Icons from 'lucide-react';
+import { DraggableModal } from '../../components/shared/DraggableModal';
 
 // --- THEME ---
 const THEME = {
@@ -57,23 +57,23 @@ const LucideIcon = ({ name, size = 16, className = "", color, style }: any) => {
 };
 
 const KPICardLarge = ({ title, val, sub, icon, color }: any) => (
-    <div className="sys-card-base p-4 flex flex-col items-start justify-between relative overflow-hidden group min-h-[110px]">
-        <div className="relative z-10 flex flex-col gap-1.5 w-full">
+    <div className="sys-card-base p-3 flex flex-col items-start justify-between relative overflow-hidden group min-h-[90px]">
+        <div className="relative z-10 flex flex-col gap-1 w-full">
             <p className="sys-kpi-label">{title}</p>
             <div className="flex items-baseline gap-2">
                 <span className="sys-kpi-value leading-none">{val.toLocaleString()}</span>
-                <span className="text-[12px] font-bold text-slate-400 uppercase">{sub}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase">{sub}</span>
             </div>
-            <div className="mt-2 flex items-center gap-1.5 w-full">
+            <div className="mt-1 flex items-center gap-1.5 w-full">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }}></div>
                 <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate">Live Target Update</span>
             </div>
         </div>
-        <div className="absolute top-4 right-4 w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:shadow-md transition-all z-10 shrink-0">
-            <LucideIcon name={icon} size={24} color={color} />
+        <div className="absolute top-3 right-3 w-10 h-10 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:shadow-md transition-all z-10 shrink-0">
+            <LucideIcon name={icon} size={20} color={color} />
         </div>
         <div className="absolute -right-8 -bottom-8 opacity-[0.03] group-hover:scale-110 group-hover:opacity-[0.06] transition-all duration-700 pointer-events-none z-0">
-            <LucideIcon name={icon} size={150} color={color} />
+            <LucideIcon name={icon} size={100} color={color} />
         </div>
     </div>
 );
@@ -90,7 +90,7 @@ const GuideTrigger = ({ onClick }: any) => (
 
 function UserGuidePanel({ isOpen, onClose }: any) {
     if (typeof document === 'undefined') return null;
-    return createPortal(
+    return (
         <>
             <div className={`fixed inset-0 z-[190] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={onClose} />
             <div className={`fixed inset-y-0 right-0 z-[200] w-96 bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.08)] transform transition-transform duration-300 ease-out flex flex-col border-l border-slate-200 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -118,8 +118,7 @@ function UserGuidePanel({ isOpen, onClose }: any) {
                 </div>
                 <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end shadow-inner"><button onClick={onClose} className="sys-btn-primary">เข้าใจแล้ว</button></div>
             </div>
-        </>,
-        document.body
+        </>
     );
 }
 
@@ -136,6 +135,7 @@ export default function PackingBoard() {
     const [plans, setPlans] = useState(INITIAL_PACKING_PLANS);
     const [sfgStock, setSfgStock] = useState<Record<string, number>>(INITIAL_SFG_STOCK);
     const [showGuide, setShowGuide] = useState(false);
+    const [isPlannerOpen, setIsPlannerOpen] = useState(false);
     
     // Execution State
     const [selectedPlanId, setSelectedPlanId] = useState(plans[0].id);
@@ -265,7 +265,7 @@ export default function PackingBoard() {
             <div className="flex flex-col flex-1 min-h-0">
                 
                 {/* KPIs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0 mb-4 md:mb-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0 mb-6">
                     <KPICardLarge title="Total Planned" val={plans.reduce((s,p)=>s+p.targetPacks, 0)} sub="Packs" color={THEME.primary} icon="target" />
                     <KPICardLarge title="Total FG Packed" val={plans.reduce((s,p)=>s+p.packedPacks, 0)} sub="Packs" color={THEME.success} icon="package-check" />
                     <KPICardLarge title="Packing WIP" val={plans.reduce((s,p)=>s+p.wipPacks, 0)} sub="Packs" color={THEME.info} icon="activity" />
@@ -336,51 +336,52 @@ export default function PackingBoard() {
                 ) : (
                     /* --- EXECUTION BOARD VIEW --- */
                     <div className="flex flex-col flex-1 min-h-0">
-                        {/* Toolbar Control */}
-                        <div className="sys-card-base p-5 mb-5 md:mb-6 shrink-0 z-20">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-end">
-                                <div className="lg:col-span-3 flex flex-col gap-1.5 w-full">
-                                    <label className="sys-label pl-1">Select Job Plan</label>
-                                    <div className="relative">
-                                        <select value={selectedPlanId} onChange={e=>setSelectedPlanId(e.target.value)} className="sys-input w-full appearance-none cursor-pointer">
-                                            {plans.filter(p=>p.status !== 'Completed').map(p => <option key={p.id} value={p.id}>{p.id} : {p.sku}</option>)}
-                                        </select>
-                                        <Icons.ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                    </div>
-                                </div>
-                                <div className="lg:col-span-3 flex flex-col gap-1.5 w-full">
-                                    <label className="sys-label pl-1">Target Machine</label>
-                                    <div className="relative">
-                                        <select value={selectedMachineId} onChange={e=>setSelectedMachineId(e.target.value)} className="sys-input w-full appearance-none cursor-pointer">
-                                            {PACKING_MACHINES.map(m => <option key={m.id} value={m.id}>{m.name} ({m.capacityKgHr} kg/hr)</option>)}
-                                        </select>
-                                        <Icons.ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                    </div>
-                                </div>
-                                <div className="lg:col-span-2 w-full">
-                                    <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex items-center justify-between shadow-inner h-[46px] mt-[18px]">
-                                        <div className="flex flex-col mt-[-10px]">
-                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1 mt-1.5">Stock SFG</p>
-                                            <div className="flex items-baseline gap-1"><span className="text-[14px] font-black text-primary font-mono leading-none">{availSfgQty.toLocaleString()}</span><span className="text-[9px] font-bold text-slate-400 uppercase">kg</span></div>
+                        <DraggableModal isOpen={isPlannerOpen} onClose={() => setIsPlannerOpen(false)} title="Select Job Plan" icon={<Icons.PackageCheck size={18} className="text-primary" />} className="w-full max-w-4xl">
+                            <div className="p-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-end">
+                                    <div className="lg:col-span-4 flex flex-col gap-1.5 w-full">
+                                        <label className="sys-label pl-1">Select Job Plan</label>
+                                        <div className="relative">
+                                            <select value={selectedPlanId} onChange={e=>setSelectedPlanId(e.target.value)} className="sys-input w-full appearance-none cursor-pointer">
+                                                {plans.filter(p=>p.status !== 'Completed').map(p => <option key={p.id} value={p.id}>{p.id} : {p.sku}</option>)}
+                                            </select>
+                                            <Icons.ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                                         </div>
                                     </div>
-                                </div>
-                                <div className="lg:col-span-2 flex flex-col gap-1.5 w-full">
-                                    <div className="flex justify-between items-center px-1 h-[14px]">
-                                        <label className="text-[10px] font-black text-accent uppercase tracking-widest leading-none">Qty to Release</label>
+                                    <div className="lg:col-span-4 flex flex-col gap-1.5 w-full">
+                                        <label className="sys-label pl-1">Target Machine</label>
+                                        <div className="relative">
+                                            <select value={selectedMachineId} onChange={e=>setSelectedMachineId(e.target.value)} className="sys-input w-full appearance-none cursor-pointer">
+                                                {PACKING_MACHINES.map(m => <option key={m.id} value={m.id}>{m.name} ({m.capacityKgHr} kg/hr)</option>)}
+                                            </select>
+                                            <Icons.ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                        </div>
                                     </div>
-                                    <div className="relative">
-                                        <input type="number" value={releaseInput} onChange={e=>setReleaseInput(Number(e.target.value))} className="sys-input w-full text-center text-lg font-black text-accent pr-10" />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">PCK</span>
+                                    <div className="lg:col-span-4 w-full">
+                                        <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex items-center justify-between shadow-inner h-[50px] mt-[22px]">
+                                            <div className="flex flex-col mt-[-10px]">
+                                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1 mt-1.5">Stock SFG</p>
+                                                <div className="flex items-baseline gap-1"><span className="text-[14px] font-black text-primary font-mono leading-none">{availSfgQty.toLocaleString()}</span><span className="text-[9px] font-bold text-slate-400 uppercase">kg</span></div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="lg:col-span-2 w-full">
-                                    <button onClick={handleStartPacking} disabled={releaseInput <= 0 || releaseInput > maxRelease} className="sys-btn-primary w-full h-[46px] flex items-center justify-center gap-2 text-xs">
-                                        <Icons.Play size={16} fill="white" /> START LOT
-                                    </button>
+                                    <div className="lg:col-span-8 flex flex-col gap-1.5 w-full mt-4">
+                                        <div className="flex justify-between items-center px-1 h-[14px]">
+                                            <label className="text-[10px] font-black text-accent uppercase tracking-widest leading-none">Qty to Release</label>
+                                        </div>
+                                        <div className="relative w-full">
+                                            <input type="number" value={releaseInput} onChange={e=>setReleaseInput(Number(e.target.value))} className="sys-input w-full text-center text-lg font-black text-accent pr-10" />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">PCK</span>
+                                        </div>
+                                    </div>
+                                    <div className="lg:col-span-4 w-full mt-4">
+                                        <button onClick={() => { handleStartPacking(); setIsPlannerOpen(false); }} disabled={releaseInput <= 0 || releaseInput > maxRelease} className="sys-btn-primary w-full h-[50px] flex items-center justify-center gap-2 text-xs">
+                                            <Icons.Play size={16} fill="white" /> START LOT
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </DraggableModal>
 
                         {/* Active Lots Visualization */}
                         <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0 w-full overflow-hidden relative">
@@ -414,8 +415,13 @@ export default function PackingBoard() {
                                     <h3 className="font-black text-[12px] text-primary flex items-center gap-2 uppercase tracking-widest">
                                         <LucideIcon name="cpu" size={16} className="text-accent" /> PACKING PROCESS BOARD
                                     </h3>
-                                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
-                                        {activeLots.length} Lines Processing
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
+                                            {activeLots.length} Lines Processing
+                                        </div>
+                                        <button onClick={() => setIsPlannerOpen(true)} className="sys-btn-primary py-1.5 px-3 flex items-center gap-1.5 text-[11px]">
+                                            <Icons.Plus size={14} /> NEW PACKING
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-slate-50/50">

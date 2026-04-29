@@ -1,5 +1,4 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 import { HelpCircle } from 'lucide-react';
 
 interface UserGuideButtonProps {
@@ -15,9 +14,7 @@ export default function UserGuideButton({
     iconClassName = "text-current",
     textClassName = "text-current"
 }: UserGuideButtonProps) {
-    if (typeof document === 'undefined') return null;
-
-    return createPortal(
+    return (
         <button 
             onClick={onClick} 
             className={`fixed right-0 top-1/4 px-2 py-4 rounded-l-xl shadow-md z-40 flex flex-col items-center gap-3 hover:-translate-x-1 transition-all group lg:z-50 ${className}`}
@@ -29,7 +26,6 @@ export default function UserGuideButton({
             >
                 USER GUIDE
             </div>
-        </button>,
-        document.body
+        </button>
     );
 }

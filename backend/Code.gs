@@ -7,38 +7,32 @@ const GLOBAL_SHEETS_CONFIG = {
     // ผู้ใช้งานระบบ
     'Users': ['id', 'employeeId', 'idCard', 'name', 'role', 'permissions', 'position', 'email', 'avatar', 'isDev', 'status'],
     
-    // ข้อมูลพนักงาน (HR Management)
-    'Employees': ['id', 'employeeId', 'idCard', 'prefix', 'firstName', 'lastName', 'gender', 'birthDate', 'department', 'position', 'branch', 'email', 'phone', 'hireDate', 'status', 'avatar', 'updatedAt'],
-    'Attendance': ['id', 'employeeId', 'date', 'checkIn', 'checkOut', 'status', 'shiftId', 'overtimeHours', 'note'],
-    'Leaves': ['id', 'employeeId', 'leaveType', 'startDate', 'endDate', 'totalDays', 'reason', 'status', 'approvedBy', 'dateRequested'],
-    'PayrollDetails': ['id', 'employeeId', 'baseSalary', 'allowance', 'deduction', 'taxRate', 'bankAccount', 'note'],
+    // ข้อมูลหลัก (Master Data)
+    'MasterItems': ['id', 'sku', 'name', 'type', 'cat', 'brand', 'w', 'pieces', 'status', 'updated'],
+    'ProductMatrix': ['id', 'sfgCode', 'sfgName', 'batterSource', 'formula', 'fgs', 'status'],
+    'EquipmentRegistry': ['id', 'machineCode', 'machineName', 'step', 'qty', 'note', 'status'],
+    'STDProcess': ['id', 'stdId', 'name', 'category', 'batchSize', 'yield', 'status', 'updatedAt'],
     
-    // การพัฒนาบุคลากร (HR Development)
-    'Trainings': ['id', 'trainingCode', 'title', 'instructor', 'startDate', 'endDate', 'location', 'maxParticipants', 'status'],
-    'TrainingAttendees': ['id', 'trainingId', 'employeeId', 'status', 'score', 'certificateNo'],
+    // การวางแผนและจัดการคำสั่งซื้อ (Planning & Orders) - 🥩 MEAT PRO ALIGNED
+    'SalesOrders': ['id', 'orderNo', 'date', 'customer', 'priority', 'items', 'volume', 'status', 'dueDate'],
+    'PlanFrPlanning': ['plNo', 'date', 'customer', 'skuCount', 'totalWeightOkg', 'status', 'priority'],
+    'ProductionPlanning': ['id', 'plNo', 'sku', 'name', 'type', 'weight', 'orderQty', 'targetPacks', 'sfg', 'status'],
     
-    // การประเมินผลปฏิบัติงาน (Performance Management)
-    'KPIs': ['id', 'employeeId', 'period', 'kpiName', 'target', 'actual', 'score', 'weight', 'evaluatorId'],
-    'Appraisals': ['id', 'employeeId', 'period', 'totalScore', 'grade', 'status', 'evaluatorId', 'note'],
+    // ติดตามการผลิตและบอร์ดรายวัน (Production Execution) - 🥩 MEAT PRO ALIGNED
+    'MixingBoard': ['id', 'date', 'sfgCode', 'productName', 'batchSet', 'location', 'weight', 'status', 'lastUpdated'],
+    'PackingBoard': ['id', 'jobId', 'fgSku', 'fgName', 'targetPacks', 'packedPacks', 'wipPacks', 'status', 'packer', 'updatedAt'],
+    'ProductionTracking': ['id', 'trackingId', 'orderInfo', 'chefHat', 'component', 'thermometer', 'snowflake', 'scissors', 'package', 'archive', 'progress', 'status'],
     
-    // การสรรหา (Recruitment)
-    'JobPostings': ['id', 'jobCode', 'title', 'department', 'positionsLeft', 'description', 'requirements', 'status', 'closingDate'],
-    'Interviews': ['id', 'jobId', 'candidateName', 'phone', 'email', 'interviewDate', 'interviewer', 'status', 'score', 'note'],
+    // การบำรุงรักษาและปัญหา (Maintenance & Problems)
+    'MachineBreakdown': ['id', 'date', 'machineId', 'machineName', 'problem', 'actionTaken', 'downtimeMinutes', 'status', 'reportedBy'],
     
-    // แรงงานสัมพันธ์ (Labor Relations)
-    'Incidents': ['id', 'caseNo', 'employeeId', 'incidentDate', 'description', 'actionTaken', 'status', 'reportedBy'],
-    
-    // ข้อมูลหลัก (Data Master)
-    'Departments': ['id', 'code', 'name', 'managerId', 'description', 'status'],
-    'Positions': ['id', 'code', 'name', 'level', 'departmentId', 'status'],
-    'Shifts': ['id', 'code', 'name', 'startTime', 'endTime', 'workDays', 'status'],
-    'Branches': ['id', 'code', 'name', 'location', 'managerId', 'status'],
-    
-    // ปฏิทินและกิจกรรม (HR Calendar)
-    'CalendarEvents': ['id', 'date', 'time', 'title', 'type', 'priority', 'status', 'isHoliday', 'color', 'createdAt'],
+    // ปฏิทินและกิจกรรม (Pro Calendar)
+    'ProCalendar': ['id', 'date', 'time', 'title', 'type', 'category', 'priority', 'status', 'description', 'createdAt'],
+    'HrCalendar': ['id', 'date', 'title', 'category', 'status', 'description', 'createdAt'],
     
     // การตั้งค่าระบบ (System Config)
-    'SystemConfig': ['id', 'category', 'key', 'value', 'description', 'updatedAt']
+    'SystemConfig': ['id', 'category', 'key', 'value', 'description', 'updatedAt'],
+    'AccessLogs': ['id', 'timestamp', 'userId', 'userName', 'action', 'details', 'ipAddress']
 };
 
 function setupDatabase() {

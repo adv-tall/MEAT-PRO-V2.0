@@ -187,7 +187,7 @@ const KPICardTracker = ({ title, val, sub, icon, color }: any) => (
 
 const GuideTrigger = ({ onClick }: { onClick: () => void }) => {
   if (typeof document === 'undefined') return null;
-  return createPortal(
+  return (
     <button 
       onClick={onClick} 
       className="fixed right-0 top-32 bg-[#55738D] text-white py-4 px-2 rounded-l-xl shadow-[-4px_0_15px_rgba(0,0,0,0.15)] hover:bg-[#C22D2E] transition-colors duration-300 z-[100] flex flex-col items-center gap-3 group border border-r-0 border-white/20"
@@ -196,14 +196,13 @@ const GuideTrigger = ({ onClick }: { onClick: () => void }) => {
       <span className="font-extrabold tracking-[0.2em] [writing-mode:vertical-rl] rotate-180 whitespace-nowrap uppercase font-mono text-[11px]">
         USER GUIDE
       </span>
-    </button>,
-    document.body
+    </button>
   );
 };
 
 function UserGuidePanel({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
     if (typeof document === 'undefined') return null;
-    return createPortal(
+    return (
         <>
             <div 
                 className={`fixed inset-0 z-[190] bg-[#2E395F]/20 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} 
@@ -232,8 +231,7 @@ function UserGuidePanel({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
                     <button onClick={onClose} className="px-8 py-3 bg-[#55738D] text-white font-black rounded-lg uppercase font-mono text-[11px] hover:bg-[#2E395F] transition-all shadow-sm">เข้าใจแล้ว</button>
                 </div>
             </div>
-        </>,
-        document.body
+        </>
     );
 }
 

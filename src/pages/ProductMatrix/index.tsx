@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import * as Icons from 'lucide-react';
 
 // --- Mocking External Dependencies for Standalone Run ---
@@ -181,7 +180,7 @@ const GuideTrigger = ({ onClick }: any) => (
 
 function UserGuidePanel({ isOpen, onClose }: any) {
     if (typeof document === 'undefined') return null;
-    return createPortal(
+    return (
         <>
             <div 
                 className={`fixed inset-0 z-[190] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} 
@@ -208,8 +207,7 @@ function UserGuidePanel({ isOpen, onClose }: any) {
                     <button onClick={onClose} className="px-8 py-3 bg-slate-500 text-white font-black rounded-lg uppercase font-mono text-[11px] hover:bg-primary transition-all shadow-sm">ปิดคู่มือ</button>
                 </div>
             </div>
-        </>,
-        document.body
+        </>
     );
 }
 
@@ -242,7 +240,7 @@ function CsvUploadModal({ isOpen, onClose, onUpload }: any) {
         if(Swal) Swal.fire({ icon: 'success', title: 'Imported!', timer: 1500, showConfirmButton: false });
     };
 
-    return createPortal(
+    return (
         <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fadeIn font-sans">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/40" onClick={e => e.stopPropagation()}>
                 <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-primary text-white">
@@ -291,8 +289,7 @@ function CsvUploadModal({ isOpen, onClose, onUpload }: any) {
                     </div>
                 )}
             </div>
-        </div>,
-        document.body
+        </div>
     );
 }
 
@@ -349,7 +346,7 @@ function MatrixConfigModal({ isOpen, onClose, sfgData, onSave, batters, fgDataba
         }
     };
 
-    return createPortal(
+    return (
         <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fadeIn font-sans">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden border border-white/40" onClick={e => e.stopPropagation()}>
                 <div className="bg-primary px-8 py-5 flex justify-between items-center shrink-0 border-b border-primary">
@@ -443,8 +440,7 @@ function MatrixConfigModal({ isOpen, onClose, sfgData, onSave, batters, fgDataba
                     <button onClick={handleSave} className="sys-btn-primary px-8 py-2.5 flex items-center gap-2"><LucideIcon name="save" size={14} color="white"/> Save Config</button>
                 </div>
             </div>
-        </div>,
-        document.body
+        </div>
     );
 }
 
@@ -628,7 +624,7 @@ export default function ProductMatrix() {
 
                                             {/* Col 4: Action */}
                                             <td className="sys-table-td py-3 px-6 pr-8 align-middle">
-                                                <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex justify-end gap-0.5 transition-opacity">
                                                     <button onClick={() => setModal({ isOpen: true, data: item })} className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:border-slate-300 hover:text-primary hover:bg-white transition-colors shadow-sm bg-slate-50"><LucideIcon name="pencil" size={14} /></button>
                                                     <button onClick={() => handleDelete(item.id)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-accent hover:border-red-200 hover:bg-red-50 transition-colors shadow-sm bg-slate-50"><LucideIcon name="trash-2" size={14} /></button>
                                                 </div>

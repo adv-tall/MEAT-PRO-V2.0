@@ -19,8 +19,8 @@ export const SYSTEM_MODULES = [
         id: 'daily_board', label: 'DAILY BOARD', icon: ClipboardList,
         subItems: [ 
             { id: 'prod_tracking', label: 'PRODUCTION TRACKING' }, 
-            { id: 'mixing_plan', label: 'MIXING PLAN' }, 
-            { id: 'packing_plan', label: 'PACKING PLAN' } 
+            { id: 'mixing_plan', label: 'MIXING BOARD' }, 
+            { id: 'packing_plan', label: 'PACKING BOARD' } 
         ] 
     },
     { 

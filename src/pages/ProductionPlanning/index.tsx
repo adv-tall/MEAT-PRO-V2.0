@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import * as Icons from 'lucide-react';
 
 // --- MOCK DATABASE (55+ ITEMS) ---
@@ -43,7 +42,7 @@ const generateMockOrders = () => {
     return orders;
 };
 
-const MOCK_ORDERS = generateMockOrders();
+export const MOCK_ORDERS = generateMockOrders();
 
 const SHIFTS = [
     { id: 'Morning', icon: 'sun', activeColor: 'bg-[#3b82f6] text-white shadow-md border-[#3b82f6]' },
@@ -86,7 +85,7 @@ const GuideTrigger = ({ onClick }: any) => (
 
 function UserGuidePanel({ isOpen, onClose }: any) {
     if (typeof document === 'undefined') return null;
-    return createPortal(
+    return (
         <>
             <div 
                 className={`fixed inset-0 z-[190] bg-[#111f42]/20 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} 
@@ -140,8 +139,7 @@ function UserGuidePanel({ isOpen, onClose }: any) {
                     <button onClick={onClose} className="sys-btn-primary">เข้าใจแล้ว</button>
                 </div>
             </div>
-        </>,
-        document.body
+        </>
     );
 }
 
@@ -361,7 +359,7 @@ export default function ProductionPlanning() {
                                                     <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border shadow-sm ${o.status === 'PLANNED' || o.status === 'IN PROGRESS' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>{o.status}</span>
                                                 </td>
                                                 <td className="sys-table-td py-3 px-6 pr-8 align-middle text-center">
-                                                    <div className="flex justify-center gap-2">
+                                                    <div className="flex justify-center gap-0.5">
                                                         <button className="sys-btn-action hover:text-primary"><Icons.Edit3 size={14} /></button>
                                                         <button onClick={() => handleDelete(o.id)} className="sys-btn-action hover:text-accent hover:bg-rose-50 hover:border-red-200"><Icons.Trash2 size={14} /></button>
                                                     </div>

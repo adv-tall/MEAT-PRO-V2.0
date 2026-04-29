@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import * as Icons from 'lucide-react';
+import { DraggableModal } from '../../components/shared/DraggableModal';
+
+import { MOCK_ORDERS } from '../ProductionPlanning';
 
 // --- CONFIGURATIONS ---
 const STEP_CONFIG: Record<string, any> = {
@@ -12,11 +14,15 @@ const STEP_CONFIG: Record<string, any> = {
     cutting: { color: '#334155', label: 'CUTTING', icon: 'scissors' } // Using system secondary
 };
 
-const BATTER_OPTIONS = [
-    { code: 'SFG-SMC-001', name: 'SFG Smoked Sausage (Standard)', totalBatches: 120, totalWeight: 18000, remaining: 75 },
-    { code: 'SFG-CHE-009', name: 'SFG Cheese Sausage Lava', totalBatches: 80, totalWeight: 12000, remaining: 42 },
-    { code: 'SFG-MTB-002', name: 'SFG Pork Meatball Grade A', totalBatches: 200, totalWeight: 30000, remaining: 110 }
-];
+// Generate options from Production Planning
+const BATTER_OPTIONS = Array.from(new Set(MOCK_ORDERS.map(o => o.sku))).map(sku => {
+    const order = MOCK_ORDERS.find(o => o.sku === sku);
+    const code = sku.replace('FG-', 'SFG-');
+    const totalWeight = MOCK_ORDERS.filter(o => o.sku === sku).reduce((sum, o) => sum + o.batterKg, 0);
+    const totalBatches = Math.ceil(totalWeight / 150);
+    const remaining = Math.max(0, Math.ceil(totalBatches * (0.3 + Math.random() * 0.4))); // mock remaining
+    return { code, name: `SFG ${order?.name.replace(' 1kg', '').replace(' 500g', '')}`, totalBatches, totalWeight, remaining };
+});
 
 const INITIAL_BATCHES = [
     { id: 'SMC-8821', setNo: 1, productName: 'SFG Smoked Sausage (Standard)', step: 'mixing', status: 'Processing', totalTime: 900, timeLeft: 275, weight: 150 },
@@ -67,7 +73,7 @@ const GuideTrigger = ({ onClick }: any) => (
 
 function UserGuidePanel({ isOpen, onClose }: any) {
     if (typeof document === 'undefined') return null;
-    return createPortal(
+    return (
         <>
             <div 
                 className={`fixed inset-0 z-[190] bg-[#111f42]/20 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} 
@@ -88,8 +94,80 @@ function UserGuidePanel({ isOpen, onClose }: any) {
                     <button onClick={onClose} className="sys-btn-primary">เข้าใจแล้ว</button>
                 </div>
             </div>
-        </>,
-        document.body
+        </>
+    );
+}
+
+function PlannerModal({ isOpen, onClose, onStart }: any) {
+    const [selectedBatter, setSelectedBatter] = useState<any>(BATTER_OPTIONS[0]);
+    const [orderSets, setOrderSets] = useState(1);
+    const remainingPercent = (selectedBatter.totalBatches > 0) ? (selectedBatter.remaining / selectedBatter.totalBatches) * 100 : 0;
+
+    const handleStart = () => {
+        if (!onStart || !selectedBatter) return;
+        const newBatches = [];
+        const numBatches = orderSets * 6; // 1S = 6B
+        for (let i = 0; i < numBatches; i++) {
+            newBatches.push({
+                id: `${selectedBatter.code.split('-').pop()}-NEW-${Math.floor(Math.random() * 10000)}`,
+                setNo: Math.floor(i / 6) + 1,
+                productName: selectedBatter.name,
+                step: 'mixing',
+                status: 'Processing',
+                totalTime: 900,
+                timeLeft: 900,
+                weight: 150
+            });
+        }
+        onStart(newBatches);
+    };
+
+    return (
+        <DraggableModal isOpen={isOpen} onClose={onClose} title="Production Planner" icon={<Icons.Activity size={18} className="text-primary animate-pulse" />} className="w-full max-w-4xl">
+            <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-end">
+                    <div className="lg:col-span-4 flex flex-col gap-1.5 w-full">
+                        <label className="sys-label pl-1">Batter Selection</label>
+                        <div className="relative">
+                            <select value={selectedBatter?.code || ''} onChange={(e) => setSelectedBatter(BATTER_OPTIONS.find(b => b.code === e.target.value))} className="sys-input w-full appearance-none cursor-pointer">
+                                {BATTER_OPTIONS.map(opt => <option key={opt.code} value={opt.code}>{opt.code} : {opt.name}</option>)}
+                            </select>
+                            <Icons.ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2 w-full">
+                        <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex items-center justify-between shadow-inner">
+                            <div className="flex flex-col">
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Total Plan</p>
+                                <div className="flex items-baseline gap-1"><span className="text-lg font-black text-primary font-mono leading-none">{selectedBatter?.totalBatches || 0}</span><span className="text-[9px] font-bold text-slate-400 uppercase">Batches</span></div>
+                            </div>
+                            <Icons.ClipboardList size={20} className="text-slate-300" />
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2 flex flex-col gap-1.5 w-full">
+                        <label className="sys-label pl-1">Remaining</label>
+                        <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex flex-col justify-center gap-2 shadow-inner h-[50px]">
+                            <span className="text-[12px] font-black text-primary font-mono leading-none">{selectedBatter?.remaining || 0} <span className="text-[9px] text-slate-400 uppercase">Left</span></span>
+                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden relative">
+                                <div className="bg-slate-500 h-full absolute left-0 top-0 transition-all duration-300" style={{ width: `${remainingPercent}%` }}></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2 flex flex-col gap-1.5 w-full">
+                        <div className="flex justify-between items-center px-1">
+                            <label className="text-[11px] font-black text-accent uppercase tracking-widest">Order Sets</label>
+                            <span className="bg-slate-100 text-slate-500 text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase font-mono border border-slate-200">1S=6B</span>
+                        </div>
+                        <input type="number" value={orderSets} onChange={(e) => setOrderSets(Math.max(1, parseInt(e.target.value) || 1))} className="sys-input w-full text-center text-lg font-black text-accent py-2" />
+                    </div>
+                    <div className="lg:col-span-2 w-full">
+                        <button onClick={handleStart} className="sys-btn-primary w-full h-[50px] flex items-center justify-center gap-2">
+                            <Icons.Play size={16} fill="white" /> Start <span className="bg-white/20 px-1.5 py-0.5 rounded text-[11px] border border-white/20 font-bold font-mono">+{orderSets * 6}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </DraggableModal>
     );
 }
 
@@ -117,7 +195,7 @@ const KPICardLarge = ({ title, val, sub, icon, color }: any) => (
 
 // --- VIEWS ---
 
-const BatchExecutionView = ({ batches, activeStep }: any) => {
+const BatchExecutionView = ({ batches, activeStep, onOpenPlanner }: any) => {
     const config = STEP_CONFIG[activeStep];
     const [qrData, setQrData] = useState<any>(null);
     const [simSpeed, setSimSpeed] = useState(1);
@@ -192,25 +270,29 @@ const BatchExecutionView = ({ batches, activeStep }: any) => {
             )}
 
             {/* Board Sub-Header */}
-            <div className="sys-table-card flex-1 flex flex-col min-h-0 shadow-soft mt-4">
+            <div className="sys-table-card flex-1 flex flex-col shadow-soft mt-0 rounded-t-none border-t-0 z-10 relative">
                 <div 
-                    className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border-b border-slate-200 shrink-0" 
+                    className="px-5 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 shrink-0" 
+                    style={{ backgroundColor: `${config.color}20` }}
                 >
-                    <h3 className="font-black text-[12px] text-primary flex items-center gap-2 uppercase tracking-widest">
-                        <LucideIcon name={config.icon} size={16} color={config.color} /> 
+                    <h3 className="font-black text-[13px] flex items-center gap-2 uppercase tracking-widest" style={{ color: config.color }}>
+                        <LucideIcon name={config.icon} size={16} /> 
                         {config.label} PROCESS BOARD
                     </h3>
                     <div className="flex items-center gap-3">
                         <span className="text-[11px] font-black text-primary bg-white px-3 py-1.5 rounded-lg uppercase border border-slate-200 shadow-sm whitespace-nowrap">
                             {batches.length} ACTIVE BATCHES
                         </span>
+                        <button onClick={onOpenPlanner} className="sys-btn-primary py-1.5 px-3 flex items-center gap-1.5">
+                            <Icons.Plus size={14} /> NEW MIXING
+                        </button>
                     </div>
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden">
+                <div className="flex-1 flex flex-col bg-white">
                 {activeStep === 'cutting' ? (
-                    <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+                    <div className="flex-1 flex flex-col md:flex-row">
                         {/* Summary Side Box */}
                         <div className="w-full md:w-64 bg-primary text-white flex flex-col p-6 shadow-md relative overflow-hidden shrink-0 m-0 md:border-r border-slate-200">
                              <div className="absolute -right-8 -bottom-8 text-white/5 transform rotate-12 transition-transform group-hover:scale-110 duration-700 pointer-events-none">
@@ -244,13 +326,13 @@ const BatchExecutionView = ({ batches, activeStep }: any) => {
                         </div>
 
                         {/* Grid Area for Cutting */}
-                        <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-slate-50/50">
+                        <div className="flex-1 p-4 md:p-6 bg-slate-50/50">
                             {renderGrid()}
                         </div>
                     </div>
                 ) : (
                     /* Standard Full Width Grid */
-                    <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-slate-50/50">
+                    <div className="flex-1 p-4 md:p-6 bg-slate-50/50">
                         {renderGrid()}
                     </div>
                 )}
@@ -379,16 +461,22 @@ export default function DailyBoard() {
     const [activeTab, setActiveTab] = useState('mixing');
     const [activeView, setActiveView] = useState('execution');
     const [showGuide, setShowGuide] = useState(false);
-    const [selectedBatter, setSelectedBatter] = useState<any>(BATTER_OPTIONS[0]);
-    const [orderSets, setOrderSets] = useState(1);
-
-    const remainingPercent = (selectedBatter.totalBatches > 0) ? (selectedBatter.remaining / selectedBatter.totalBatches) * 100 : 0;
+    const [isPlannerOpen, setIsPlannerOpen] = useState(false);
+    const [batches, setBatches] = useState(INITIAL_BATCHES);
 
     return (
         <div className="flex flex-col min-h-0 h-full w-full font-sans">
             
             <GuideTrigger onClick={() => setShowGuide(true)} />
             <UserGuidePanel isOpen={showGuide} onClose={() => setShowGuide(false)} />
+            <PlannerModal 
+                isOpen={isPlannerOpen} 
+                onClose={() => setIsPlannerOpen(false)} 
+                onStart={(newBatches: any) => {
+                    setBatches(prev => [...newBatches, ...prev]);
+                    setIsPlannerOpen(false);
+                }} 
+            />
 
             {/* Header Area */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0 animate-fadeIn pb-6 z-10 relative">
@@ -423,68 +511,12 @@ export default function DailyBoard() {
                 </div>
             </header>
 
-            <main className="sys-page-layout flex flex-col flex-1 min-h-0">
-                
-                {activeView === 'execution' && (
-                    <div className="sys-card-base p-5 mb-5 md:mb-6 shrink-0 z-20">
-                        <div className="flex justify-between items-center mb-5 gap-4">
-                            <h2 className="text-sm font-black text-primary flex items-center gap-2 uppercase tracking-tight shrink-0">
-                                <Icons.Activity size={16} className="text-primary animate-pulse" /> Production Planner
-                            </h2>
-                            <button className="sys-btn-action flex items-center gap-2 whitespace-nowrap">
-                                <Icons.Upload size={14} /> <span className="hidden sm:inline">Import CSV Batches</span>
-                            </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-end">
-                            <div className="lg:col-span-4 flex flex-col gap-1.5 w-full">
-                                <label className="sys-label pl-1">Batter Selection</label>
-                                <div className="relative">
-                                    <select value={selectedBatter.code} onChange={(e) => setSelectedBatter(BATTER_OPTIONS.find(b => b.code === e.target.value))} className="sys-input w-full appearance-none cursor-pointer">
-                                        {BATTER_OPTIONS.map(opt => <option key={opt.code} value={opt.code}>{opt.code} : {opt.name}</option>)}
-                                    </select>
-                                    <Icons.ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                </div>
-                            </div>
-                            <div className="lg:col-span-2 w-full">
-                                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex items-center justify-between shadow-inner">
-                                    <div className="flex flex-col">
-                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Total Plan</p>
-                                        <div className="flex items-baseline gap-1"><span className="text-lg font-black text-primary font-mono leading-none">{selectedBatter.totalBatches}</span><span className="text-[9px] font-bold text-slate-400 uppercase">Batches</span></div>
-                                    </div>
-                                    <Icons.ClipboardList size={20} className="text-slate-300" />
-                                </div>
-                            </div>
-                            <div className="lg:col-span-2 flex flex-col gap-1.5 w-full">
-                                <label className="sys-label pl-1">Remaining</label>
-                                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex flex-col justify-center gap-2 shadow-inner h-[50px]">
-                                    <span className="text-[12px] font-black text-primary font-mono leading-none">{selectedBatter.remaining} <span className="text-[9px] text-slate-400 uppercase">Left</span></span>
-                                    <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden relative">
-                                        <div className="bg-slate-500 h-full absolute left-0 top-0 transition-all duration-300" style={{ width: `${remainingPercent}%` }}></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="lg:col-span-2 flex flex-col gap-1.5 w-full">
-                                <div className="flex justify-between items-center px-1">
-                                    <label className="text-[11px] font-black text-accent uppercase tracking-widest">Order Sets</label>
-                                    <span className="bg-slate-100 text-slate-500 text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase font-mono border border-slate-200">1S=6B</span>
-                                </div>
-                                <input type="number" value={orderSets} onChange={(e) => setOrderSets(Math.max(1, parseInt(e.target.value) || 1))} className="sys-input w-full text-center text-lg font-black text-accent py-2" />
-                            </div>
-                            <div className="lg:col-span-2 w-full">
-                                <button className="sys-btn-primary w-full h-[50px] flex items-center justify-center gap-2">
-                                    <Icons.Play size={16} fill="white" /> Start <span className="bg-white/20 px-1.5 py-0.5 rounded text-[11px] border border-white/20 font-bold font-mono">+{orderSets * 6}</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <div className={`flex flex-col flex-1 min-h-0 w-full overflow-hidden ${activeView === 'execution' ? 'relative' : ''}`}>
+            <main className="sys-page-layout flex flex-col flex-1">
+                <div className={`flex flex-col flex-1 w-full ${activeView === 'execution' ? 'relative' : ''}`}>
                     
                     {activeView === 'execution' && (
-                        <div className="bg-white/50 backdrop-blur-md p-4 lg:p-6 pb-0 border-x border-t border-slate-200 rounded-t-2xl shrink-0 z-10">
-                            <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2">
+                        <div className="bg-white p-4 lg:p-6 pb-1 border-x border-t border-slate-200 rounded-t-2xl shrink-0 z-10 shadow-sm relative z-20">
+                            <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-1">
                                 {Object.entries(STEP_CONFIG).map(([id, step]) => (
                                     <button key={id} onClick={() => setActiveTab(id)} 
                                         className={`flex-1 min-w-[140px] px-4 py-3.5 rounded-xl transition-all flex items-center justify-between group border relative overflow-hidden ${activeTab === id ? 'shadow-md text-white border-transparent' : 'bg-white hover:bg-slate-50 text-slate-500 border-slate-200'}`} 
@@ -494,7 +526,7 @@ export default function DailyBoard() {
                                             <span className="text-[12px] font-black uppercase tracking-widest">{step.label}</span>
                                         </div>
                                         <span className={`text-[12px] font-mono font-black px-2.5 py-1 rounded-lg z-10 shrink-0 ${activeTab === id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                            {INITIAL_BATCHES.filter(b => b.step === id).length}
+                                            {batches.filter(b => b.step === id).length}
                                         </span>
                                         <div className="absolute -right-2 -bottom-2 opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform">
                                             <LucideIcon name={step.icon} size={60} color={activeTab === id ? 'white' : step.color} />
@@ -506,7 +538,7 @@ export default function DailyBoard() {
                     )}
 
                     {activeView === 'execution' ? (
-                        <BatchExecutionView batches={INITIAL_BATCHES.filter(b => b.step === activeTab)} activeStep={activeTab} />
+                        <BatchExecutionView batches={batches.filter(b => b.step === activeTab)} activeStep={activeTab} onOpenPlanner={() => setIsPlannerOpen(true)} />
                     ) : activeView === 'waiting' ? (
                         <SFGWaitingView />
                     ) : (

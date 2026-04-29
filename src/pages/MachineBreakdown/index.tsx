@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import * as Icons from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
@@ -87,7 +86,7 @@ const GuideTrigger = ({ onClick }: any) => (
 
 function UserGuidePanel({ isOpen, onClose }: any) {
     if (typeof document === 'undefined') return null;
-    return createPortal(
+    return (
         <>
             <div 
                 className={`fixed inset-0 z-[190] bg-[#111f42]/20 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} 
@@ -131,8 +130,7 @@ function UserGuidePanel({ isOpen, onClose }: any) {
                     <button onClick={onClose} className="sys-btn-primary">เข้าใจแล้ว</button>
                 </div>
             </div>
-        </>,
-        document.body
+        </>
     );
 }
 
@@ -412,7 +410,7 @@ export default function MachineBreakdown() {
 
                                                 {/* Col 7: Action */}
                                                 <td className="py-3 px-6 pr-8 align-middle">
-                                                    <div className="flex justify-end gap-2 text-slate-500">
+                                                    <div className="flex justify-end gap-0.5 text-slate-500">
                                                         <button onClick={() => handleOpenModal(item)} className="sys-btn-action hover:text-primary">
                                                             <Icons.Pencil size={14} />
                                                         </button>

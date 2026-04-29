@@ -139,7 +139,7 @@ function CsvUploadModal({ isOpen, onClose, onUpload }: any) {
         if(Swal) Swal.fire({ icon: 'success', title: 'Imported!', text: 'Data has been successfully imported.', timer: 1500, showConfirmButton: false });
     };
 
-    return createPortal(
+    return (
         <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fadeIn font-sans">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] border border-white/40" onClick={e => e.stopPropagation()}>
                 <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-primary text-white">
@@ -199,8 +199,7 @@ function CsvUploadModal({ isOpen, onClose, onUpload }: any) {
                     </div>
                 )}
             </div>
-        </div>,
-        document.body
+        </div>
     );
 }
 
@@ -238,7 +237,7 @@ function ItemModal({ isOpen, onClose, data, onSave, categories, brands, activeMa
 
     const isFinishedGood = formData.type === 'FG';
 
-    return createPortal(
+    return (
         <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fadeIn font-sans">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden relative border border-white/40 h-[85vh] md:h-auto" onClick={e => e.stopPropagation()}>
                 <div className="bg-primary px-8 py-5 flex justify-between items-center shrink-0 border-b border-primary">
@@ -356,8 +355,7 @@ function ItemModal({ isOpen, onClose, data, onSave, categories, brands, activeMa
                     <button onClick={handleSave} className="sys-btn-primary px-8 py-2.5 flex items-center gap-2"><LucideIcon name="save" size={14} color="white"/> Save Item</button>
                 </div>
             </div>
-        </div>,
-        document.body
+        </div>
     );
 }
 
@@ -647,7 +645,7 @@ export default function MasterItems() {
 
                                             {/* Col 8: Action */}
                                             <td className="sys-table-td py-2.5 px-6 pr-8 align-middle">
-                                                <div className="flex justify-end items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex justify-end items-center gap-0.5 transition-opacity">
                                                     <button onClick={() => setItemModal({ isOpen: true, data: item })} className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:border-slate-300 hover:text-primary hover:bg-white transition-colors shadow-sm bg-slate-50" title="Edit">
                                                         <Icons.Pencil size={14} />
                                                     </button>
