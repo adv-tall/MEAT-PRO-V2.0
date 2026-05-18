@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import * as Icons from 'lucide-react';
+import { AIGeneratorModal } from '../../components/shared/AIGeneratorModal';
 
 // --- MOCK DATABASE (55+ ITEMS) ---
 const FG_DATABASE = [
@@ -183,7 +184,11 @@ export default function ProductionPlanning() {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [showGuide, setShowGuide] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [pendingIAReplans, setPendingIAReplans] = useState([
+        { id: 'IA-RP-001', product: 'Pork Meatball', lossKg: 20, refPrb: 'PRB-002', status: 'Pending Approval' }
+    ]);
 
     const [newItem, setNewItem] = useState({ date: new Date().toISOString().split('T')[0], time: '12:00', jobType: 'Normal', sku: '', quantity: '' });
 
@@ -253,6 +258,19 @@ export default function ProductionPlanning() {
         return filtered;
     }, [orders, activeShift, activeMainTab, searchTerm]);
 
+    const handleApproveReplan = (replan: any) => {
+        const fg = FG_DATABASE.find(f => f.name === replan.product) || FG_DATABASE[0];
+        const newOrder = {
+            id: `RP-PLAN-${String(Math.floor(Math.random()*1000)).padStart(3, '0')}`,
+            sku: fg.sku, name: fg.name, qty: Math.ceil(replan.lossKg / fg.weight), fgKg: replan.lossKg, sfgKg: replan.lossKg, batterKg: Number((replan.lossKg * 1.1).toFixed(2)),
+            deadline: 'TBD', startTime: 'TBD', status: 'DRAFT', isReplacement: true,
+            shift: 'All Day', currentStep: 'Entry'
+        };
+        setOrders([newOrder, ...orders]);
+        setPendingIAReplans(pendingIAReplans.filter(p => p.id !== replan.id));
+        if ((window as any).Swal) (window as any).Swal.fire({ icon: 'success', title: 'Replacement Added to Queue', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+    };
+
     if (loading) return (
         <div className="flex h-screen w-full items-center justify-center bg-transparent">
             <div className="flex flex-col items-center gap-4">
@@ -290,6 +308,37 @@ export default function ProductionPlanning() {
             </header>
 
             <main className="sys-page-layout flex flex-col flex-1 min-h-0">
+                {pendingIAReplans.length > 0 && (
+                    <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 shadow-sm animate-fadeIn">
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-accent shrink-0">
+                                <Icons.Bot size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-accent text-sm flex items-center gap-2">
+                                    <span className="relative flex h-2.5 w-2.5">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                                    </span>
+                                    IA GENERATOR ALERT
+                                </h3>
+                                <p className="text-xs text-rose-600 font-medium mt-1">There are {pendingIAReplans.length} replacement requests from DAILY PROBLEM waiting to be approved.</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-2 w-full md:w-auto">
+                            {pendingIAReplans.map(rp => (
+                                <div key={rp.id} className="bg-white px-4 py-2 border border-rose-100 rounded-xl flex items-center justify-between gap-6 shadow-sm">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{rp.refPrb}</span>
+                                        <span className="font-bold text-sm text-primary">{rp.product} <span className="text-rose-600">({rp.lossKg} Kg)</span></span>
+                                    </div>
+                                    <button onClick={() => handleApproveReplan(rp)} className="sys-btn-primary bg-primary hover:bg-slate-800 text-[10px] px-4 py-1.5 h-auto">Approve & Push to Queue</button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
                     <KPICard title="Total FG Required" val={totalSummary.fg} unit="Kg" color={THEME.primary} icon="package-check" desc="Output" />
                     <KPICard title="Flagship AFM" val={50000} unit="Kg" color={THEME.accent} icon="award" desc="Target 50T" />
@@ -310,6 +359,9 @@ export default function ProductionPlanning() {
                                 <input type="text" placeholder="Search Order, SKU..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="sys-input w-full pl-10 pr-4 py-2" />
                             </div>
                             <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 shadow-sm px-3 py-2 rounded-md">{filteredOrders.length} Items</div>
+                            <button onClick={() => setIsAIGeneratorOpen(true)} className="bg-[#2E395F] hover:bg-[#1f2641] text-white px-4 py-2 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 whitespace-nowrap shrink-0 h-10">
+                                <Icons.Bot size={16} className="text-[#DCBC1B]"/> AI Plan
+                            </button>
                             <button onClick={() => setIsAddModalOpen(true)} className="sys-btn-primary whitespace-nowrap shrink-0 h-10"><Icons.Plus size={16}/> New Order</button>
                         </div>
                     </div>
@@ -430,6 +482,16 @@ export default function ProductionPlanning() {
                     </StandardModalWrapper>
                 </div>
             )}
+
+            <AIGeneratorModal 
+                isOpen={isAIGeneratorOpen} 
+                onClose={() => setIsAIGeneratorOpen(false)} 
+                orders={orders.filter(o => o.status === 'DRAFT' || o.status === 'PLANNED')} 
+                onApply={(plan) => {
+                    const Swal = (window as any).Swal;
+                    if(Swal) Swal.fire({ icon: 'success', title: 'Plan Applied', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+                }} 
+            />
         </div>
     );
 }

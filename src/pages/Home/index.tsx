@@ -10,8 +10,11 @@ import PackingBoard from '../PackingBoard';
 import MasterItems from '../MasterItems';
 import ProductMatrix from '../ProductMatrix';
 import PlanFrPlanning from '../PlanFrPlanning';
+import AiPlannerAsst from '../AiPlannerAsst';
 import STDProcess from '../STDProcess';
 import EquipmentRegistry from '../EquipmentRegistry';
+import UnplannedJobs from '../UnplannedJobs';
+import AiCopilot from '../AiCopilot';
 import { SYSTEM_MODULES } from '../../config/modules';
 import DateTimeBadge from '../../components/shared/DateTimeBadge';
 import KpiCard from '../../components/shared/KpiCard';
@@ -415,8 +418,10 @@ export default function Home() {
         let icon = Users;
 
         if (tabId === 'dashboard') return <DashboardView />;
+        if (tabId === 'ai_copilot' || tabId === 'AI_COPILOT') return <AiCopilot />;
         if (tabId === 'pro_calendar' || tabId === 'PRO_CALENDAR') return <ProCalendar />;
         if (tabId === 'plan_fr_planning' || tabId === 'PLAN_FR_PLANNING') return <PlanFrPlanning />;
+        if (tabId === 'ai_planner_asst' || tabId === 'AI_PLANNER_ASST') return <AiPlannerAsst />;
         if (tabId === 'plan_by_prod' || tabId === 'PLAN_BY_PROD') return <ProductionPlanning />;
         if (tabId === 'mixing_plan' || tabId === 'MIXING_PLAN') return <DailyBoard />;
         if (tabId === 'packing_plan' || tabId === 'PACKING_PLAN') return <PackingBoard />;
@@ -426,6 +431,7 @@ export default function Home() {
         if (tabId === 'machine_breakdown' || tabId === 'MACHINE_BREAKDOWN') return <MachineBreakdown />;
         if (tabId === 'std_process_time') return <STDProcess />;
         if (tabId === 'equipment_registry') return <EquipmentRegistry />;
+        if (tabId === 'unplanned_jobs' || tabId === 'UNPLANNED_JOBS') return <UnplannedJobs />;
         if (tabId === 'user_permission' || tabId === 'USER_PERMISSION') return <UserPermissions />;
         if (tabId === 'system_config' || tabId === 'SYSTEM_CONFIG') return <SystemConfig />;
         if (tabId === 'dev_permit') return isDev ? <DevPermit /> : <div className="p-8 text-center text-slate-500">Access Denied</div>;

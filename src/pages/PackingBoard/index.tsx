@@ -144,6 +144,7 @@ export default function PackingBoard() {
     const [activeLots, setActiveLots] = useState<any[]>([]);
     const [simSpeed, setSimSpeed] = useState(1);
     const [batchSeq, setBatchSeq] = useState(1);
+    const [showCompleted, setShowCompleted] = useState(false);
 
     // Derived State
     const currentPlan = useMemo(() => plans.find(p => p.id === selectedPlanId), [plans, selectedPlanId]);
@@ -181,12 +182,12 @@ export default function PackingBoard() {
                                 }
                                 return p;
                             }));
-                            return null;
+                            return { ...lot, timeLeft: 0, status: 'Completed' };
                         }
                         return { ...lot, timeLeft: newTime };
                     }
                     return lot;
-                }).filter(Boolean);
+                });
                 return next;
             });
         }, 1000);
@@ -416,8 +417,12 @@ export default function PackingBoard() {
                                         <LucideIcon name="cpu" size={16} className="text-accent" /> PACKING PROCESS BOARD
                                     </h3>
                                     <div className="flex items-center gap-3">
+                                        <label className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase cursor-pointer">
+                                            <input type="checkbox" checked={showCompleted} onChange={(e) => setShowCompleted(e.target.checked)} className="rounded text-primary focus:ring-primary" />
+                                            Show Completed
+                                        </label>
                                         <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
-                                            {activeLots.length} Lines Processing
+                                            {activeLots.filter(l => showCompleted ? true : l.status !== 'Completed').length} Lines Processing
                                         </div>
                                         <button onClick={() => setIsPlannerOpen(true)} className="sys-btn-primary py-1.5 px-3 flex items-center gap-1.5 text-[11px]">
                                             <Icons.Plus size={14} /> NEW PACKING
@@ -425,12 +430,12 @@ export default function PackingBoard() {
                                     </div>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-slate-50/50">
-                                    {activeLots.length > 0 ? (
+                                    {activeLots.filter(l => showCompleted ? true : l.status !== 'Completed').length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 gap-4">
-                                            {activeLots.map(lot => {
+                                            {activeLots.filter(l => showCompleted ? true : l.status !== 'Completed').map(lot => {
                                                 const progress = 100 - ((lot.timeLeft / lot.totalTime) * 100);
                                                 return (
-                                                    <div key={lot.id} className="sys-card-base p-3 relative group hover:shadow-md transition-all flex flex-col h-[180px]">
+                                                    <div key={lot.id} className={`sys-card-base p-3 relative group hover:shadow-md transition-all flex flex-col h-[180px] ${lot.status === 'Completed' ? 'opacity-60 saturate-50 bg-slate-50' : ''}`}>
                                                         <div className="flex justify-between items-start mb-2 gap-2">
                                                             <div className="flex flex-col flex-1 min-w-0">
                                                                 <span className="font-mono font-black text-accent text-[12px]">{lot.id}</span>
@@ -438,7 +443,7 @@ export default function PackingBoard() {
                                                             </div>
                                                             <div className="text-right shrink-0">
                                                                 <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate max-w-[80px]" title={lot.machineName}>{lot.machineName}</div>
-                                                                <span className="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded-md border border-blue-200 animate-pulse uppercase shadow-sm">Packing</span>
+                                                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-md border animate-pulse uppercase shadow-sm ${lot.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>{lot.status === 'Completed' ? 'Completed' : 'Packing'}</span>
                                                             </div>
                                                         </div>
                                                         <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 mb-3 shadow-inner">
@@ -447,7 +452,7 @@ export default function PackingBoard() {
                                                                 <span className="text-[11px] font-black text-primary font-mono">{Math.round(progress)}%</span>
                                                             </div>
                                                             <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mb-1.5">
-                                                                <div className="bg-blue-500 h-full transition-all duration-1000 ease-linear rounded-full" style={{ width: `${progress}%` }}></div>
+                                                                <div className={`h-full transition-all duration-1000 ease-linear rounded-full ${lot.status === 'Completed' ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${progress}%` }}></div>
                                                             </div>
                                                             <div className="flex justify-between text-[11px] font-mono font-bold text-slate-500">
                                                                 <span>{lot.qty.toLocaleString()} Pks</span>
@@ -455,11 +460,17 @@ export default function PackingBoard() {
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-1.5 mt-auto">
-                                                            <button onClick={() => {
-                                                                setActiveLots(curr => curr.map(l => l.id === lot.id ? {...l, timeLeft: 0} : l));
-                                                            }} className="flex-1 bg-white border border-slate-200 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:text-white hover:bg-accent hover:border-transparent flex items-center justify-center gap-1.5 shadow-sm active:scale-95 text-slate-500">
-                                                                Force Finish
-                                                            </button>
+                                                            {lot.status !== 'Completed' ? (
+                                                                <button onClick={() => {
+                                                                    setActiveLots(curr => curr.map(l => l.id === lot.id ? {...l, timeLeft: 1} : l));
+                                                                }} className="flex-1 bg-white border border-slate-200 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:text-white hover:bg-accent hover:border-transparent flex items-center justify-center gap-1.5 shadow-sm active:scale-95 text-slate-500">
+                                                                    Force Finish
+                                                                </button>
+                                                            ) : (
+                                                                <div className="flex-1 border bg-slate-100 border-slate-200 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-center shadow-inner">
+                                                                    FINISHED
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 );

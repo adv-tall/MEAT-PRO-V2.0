@@ -24,7 +24,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { id: 'outbound', path: '/outbound', name: 'Outbound Control', icon: ArrowUpRight, isConfidential: false },
   { id: 'inventory', path: '/inventory', name: 'Inventory Core', icon: Boxes, isConfidential: false },
   { id: 'returns', path: '/returns', name: 'Returns & QC', icon: RotateCcw, isConfidential: false },
-  { id: 'settings', path: '/settings', name: 'WMS Settings', icon: Settings, isConfidential: true },
+  { id: 'settings', path: '/settings', name: 'Settings', icon: Settings, isConfidential: true },
   { id: 'permissions', path: '/permissions', name: 'User Permissions', icon: Users, isConfidential: true },
   { id: 'access_logs', path: '/access-logs', name: 'Access Logs', icon: History, isConfidential: true },
 ];

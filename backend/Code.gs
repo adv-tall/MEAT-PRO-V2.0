@@ -11,7 +11,7 @@ const GLOBAL_SHEETS_CONFIG = {
     'MasterItems': ['id', 'sku', 'name', 'type', 'cat', 'brand', 'w', 'pieces', 'status', 'updated'],
     'ProductMatrix': ['id', 'sfgCode', 'sfgName', 'batterSource', 'formula', 'fgs', 'status'],
     'EquipmentRegistry': ['id', 'machineCode', 'machineName', 'step', 'qty', 'note', 'status'],
-    'STDProcess': ['id', 'stdId', 'name', 'category', 'batchSize', 'yield', 'status', 'updatedAt'],
+    'STDProcess': ['id', 'stdId', 'name', 'category', 'batchSize', 'yield', 'timeMin', 'capacity', 'tolerance', 'status', 'updatedAt'],
     
     // การวางแผนและจัดการคำสั่งซื้อ (Planning & Orders) - 🥩 MEAT PRO ALIGNED
     'SalesOrders': ['id', 'orderNo', 'date', 'customer', 'priority', 'items', 'volume', 'status', 'dueDate'],

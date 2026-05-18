@@ -34,7 +34,37 @@ export const cache = {
 
 export const api = {
   post: async <T = any>(action: string, sheet?: string, data?: any, params?: { limit?: number, offset?: number }): Promise<ApiResponse<T>> => {
-    if (!SCRIPT_URL) {
+  // Hardcoded demo credentials to bypass backend requirements
+  if (action === 'login' && data) {
+    if (data.employeeId === 'DEV001' && data.idCard === '1234567890123') {
+      return {
+        status: 'success',
+        data: {
+          id: '4', employeeId: 'DEV001', name: 'T-DCC Developer', role: 'Super Admin',
+          avatar: 'https://drive.google.com/thumbnail?id=1Z_fRbN9S4aA7OkHb3mlim_t60wIT4huY&sz=w400',
+          isDev: true, permissions: { canCreate: true, canEdit: true, canApprove: true, canVerify: true }
+        }
+      } as ApiResponse<T>;
+    } else if (data.employeeId === 'ADMIN001' && data.idCard === 'ADMIN12345678') {
+      return {
+        status: 'success',
+        data: {
+          id: '5', employeeId: 'ADMIN001', name: 'Admin Demo', role: 'Admin', avatar: '',
+          isDev: false, permissions: { canCreate: true, canEdit: true, canApprove: true, canVerify: true }
+        }
+      } as ApiResponse<T>;
+    } else if (data.employeeId === 'DEMO' && data.idCard === 'DEMO123456789') {
+      return {
+        status: 'success',
+        data: {
+          id: '6', employeeId: 'DEMO', name: 'Demo Operator', role: 'Operator', avatar: '',
+          isDev: false, permissions: {}
+        }
+      } as ApiResponse<T>;
+    }
+  }
+
+  if (!SCRIPT_URL) {
       console.warn('VITE_APPS_SCRIPT_URL is not set. Using mock response.');
       return mockResponse(action, data);
     }
@@ -69,11 +99,11 @@ const mockResponse = async (action: string, data: any): Promise<ApiResponse> => 
           isDev: true, permissions: { canCreate: true, canEdit: true, canApprove: true, canVerify: true }
         }
       };
-    } else if (data.employeeId === 'U001' && data.idCard === 'ADMIN12345678') {
+    } else if (data.employeeId === 'ADMIN001' && data.idCard === 'ADMIN12345678') {
       return {
         status: 'success',
         data: {
-          id: '5', employeeId: 'U001', name: 'Demo User 1', role: 'Admin', avatar: '',
+          id: '5', employeeId: 'ADMIN001', name: 'Admin Demo', role: 'Admin', avatar: '',
           isDev: false, permissions: { canCreate: true, canEdit: true, canApprove: true, canVerify: true }
         }
       };

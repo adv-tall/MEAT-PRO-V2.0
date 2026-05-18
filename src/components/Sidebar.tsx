@@ -6,7 +6,7 @@ import {
   ChevronRight,
   Lock,
   LogOut,
-  Warehouse,
+  Beef,
   LayoutDashboard,
   ArrowDownToLine,
   ArrowUpRight,
@@ -58,17 +58,14 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       <div className="flex h-24 items-center justify-center border-b border-white/5 bg-[#0a0f1d]">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-slate-800 text-white shadow-lg border border-white/10">
-            <Warehouse size={24} strokeWidth={2.5} />
+            <Beef size={24} strokeWidth={2.5} />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 text-xl font-black tracking-widest">
-                <span className="text-white">WMS</span>
-                <span className="text-accent underline decoration-2 underline-offset-4">MASTER</span>
+              <div className="flex flex-col gap-1.5 text-[14px] font-black tracking-widest leading-none">
+                <span className="text-white">INTELLIGENCE MEAT</span>
+                <span className="text-[#E3624A] underline decoration-2 underline-offset-4">PRODUCTION SYSTEM</span>
               </div>
-              <span className="text-[9px] font-black text-slate-500 tracking-[0.2em] uppercase mt-1">
-                Warehouse Core
-              </span>
             </div>
           )}
         </div>
@@ -98,7 +95,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         <div>
           {!isCollapsed && (
             <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 px-2">
-              WMS Modules
+              System Modules
             </h3>
           )}
           <div className="space-y-1.5">

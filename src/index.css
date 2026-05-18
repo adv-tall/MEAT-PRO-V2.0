@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-en: "JetBrains Mono", monospace;
   --font-th: "Noto Sans Thai", sans-serif;
   --font-system: "JetBrains Mono", "Noto Sans Thai", sans-serif;
+  --font-prompt: "Prompt", sans-serif;
   --color-primary: #111f42;
   --color-accent: #E3624A;
 }
@@ -64,19 +65,19 @@
   /* ----- 2. LAYOUTS & CONTAINERS (เลย์เอาต์และระยะห่าง) ----- */
   
   /* กรอบของหน้าเพจโดยรวม - ขยายเต็มพื้นที่ (Full Responsive 100%), ปรับระยะห่าง GapHeader: pt-2 */
-  .sys-page-layout { @apply w-full space-y-4 flex-1 flex flex-col min-h-0; }
+  .sys-page-layout { @apply w-full space-y-4 flex flex-col; }
   
   /* เนื้อหาหลักด้านล่าง Header */
   .sys-main-content { @apply pt-2 space-y-3 md:space-y-4; }
 
   /* กรอบ Card พื้นฐานสีขาว - KPI Cards สูงเต็ม h-full */
-  .sys-card-base { @apply bg-white p-4 md:p-6 rounded-[20px] md:rounded-[24px] shadow-sm border border-slate-100 h-full pt-2; }
+  .sys-card-base { @apply bg-white p-4 md:p-6 rounded-[20px] shadow-sm border border-slate-100 h-full pt-2; }
   
-  /* กรอบ Card สำหรับครอบตาราง - ขอบเหลี่ยม (rounded-none) */
-  .sys-table-card { @apply bg-white rounded-none border border-slate-200 shadow-sm overflow-hidden; }
+  /* กรอบ Card สำหรับครอบตาราง - Flat Design */
+  .sys-table-card { @apply flex flex-col bg-transparent w-full; }
   
-  /* กรอบ Card สำหรับปฏิทิน - ขอบเหลี่ยม (rounded-none) */
-  .sys-calendar-card { @apply bg-white rounded-none border border-slate-200 shadow-sm overflow-hidden; }
+  /* กรอบ Card สำหรับปฏิทิน - Flat Design */
+  .sys-calendar-card { @apply flex flex-col bg-transparent w-full; }
 
 
   /* ----- 3. PAGINATION (ระบบแบ่งหน้าตาราง) ----- */

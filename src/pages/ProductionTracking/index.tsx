@@ -257,6 +257,9 @@ export default function ProductionTracking() {
     }, [filterStatus, searchDaily]);
 
     const activeStatuses = ['ALL', 'IN PROGRESS', 'DELAYED', 'COMPLETED'];
+    const [pendingIAReplans] = useState([
+        { id: 'IA-RP-001', product: 'Pork Meatball', lossKg: 20, refPrb: 'PRB-002', status: 'Pending Approval' }
+    ]);
 
     return (
         <>
@@ -305,6 +308,26 @@ export default function ProductionTracking() {
 
                 <main className="flex-1 w-full flex flex-col gap-6 animate-fadeIn min-h-0">
                     
+                    {pendingIAReplans.length > 0 && (
+                        <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm animate-fadeIn">
+                            <div className="flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-accent shrink-0">
+                                    <Icons.Bot size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-accent text-sm flex items-center gap-2">
+                                        <span className="relative flex h-2.5 w-2.5">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                                        </span>
+                                        IA GENERATOR ALERT
+                                    </h3>
+                                    <p className="text-xs text-rose-600 font-medium mt-1">There are {pendingIAReplans.length} replacement requests waiting to be approved in <strong className="font-bold uppercase tracking-widest bg-rose-100 px-1 rounded">Production Planning</strong>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* KPIs */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
                         <KPICardTracker title="Total Planned" val={920} sub="OUTPUT BATCHES" color="#C22D2E" icon="target" />

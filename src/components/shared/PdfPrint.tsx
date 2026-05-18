@@ -40,7 +40,7 @@ export function PdfPrint({
         </head>
         <body>
           <div class="header">
-            <div class="logo">WMS MASTER</div>
+            <div class="logo">INTELLIGENCE MEAT PRODUCTION SYSTEM</div>
             <div>
               <div class="title">${title}</div>
               <div class="date">Printed on: ${new Date().toLocaleString()}</div>

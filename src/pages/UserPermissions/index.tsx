@@ -32,16 +32,17 @@ const palette = {
 // --- Permission Level Definition ---
 const PERMISSION_LEVELS = [
   { level: 0, label: 'No Access', icon: Ban, color: '#94A3B8', bg: '#F1F5F9' },
-  { level: 1, label: 'Viewer', icon: Eye, color: palette.primary, bg: '#E0F2FE' },
-  { level: 2, label: 'Editor', icon: Edit, color: palette.gold, bg: '#FEF3C7' },
-  { level: 3, label: 'Verifier', icon: CheckSquare, color: palette.success, bg: '#E0F2FE' },
-  { level: 4, label: 'Approver', icon: Award, color: palette.danger, bg: '#FEE2E2' },
+  { level: 1, label: 'View', icon: Eye, color: palette.primary, bg: '#E0F2FE' },
+  { level: 2, label: 'Edit', icon: Edit, color: palette.gold, bg: '#FEF3C7' },
+  { level: 3, label: 'Delete', icon: Trash2, color: palette.danger, bg: '#FEE2E2' },
+  { level: 4, label: 'Verify', icon: CheckSquare, color: palette.success, bg: '#E0F2FE' },
+  { level: 5, label: 'Approve', icon: Award, color: palette.warning, bg: '#FEF3C7' },
 ];
 
 import { SYSTEM_MODULES } from '../../config/modules';
 
 export default function UserPermissions() {
-  const [activeTab, setActiveTab] = useState('step1'); // 'step1' | 'step2'
+  const [activeTab, setActiveTab] = useState('step3'); // 'step1' | 'step2' | 'step3'
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'matrix'
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState(1);
@@ -53,6 +54,31 @@ export default function UserPermissions() {
     { id: 2, name: 'Suda Rakdee', position: 'Recruitment Lead', email: 'suda@hrmaster.com', avatar: 'https://i.pravatar.cc/150?img=5', isDev: false },
     { id: 3, name: 'Developer Team', position: 'System Admin', email: 'admin@hrmaster.com', avatar: 'https://i.pravatar.cc/150?img=12', isDev: true },
   ]);
+
+  const [roles] = useState([
+    { id: 1, name: 'System Administrator', description: 'Full access to all modules and configurations', badgeColor: 'bg-red-100 text-red-600', isDev: true },
+    { id: 2, name: 'HR Manager', description: 'Access to HR, Recruiting, and Employee records', badgeColor: 'bg-blue-100 text-blue-600', isDev: false },
+    { id: 3, name: 'Department Head', description: 'Can view and approve requests within their department', badgeColor: 'bg-green-100 text-green-600', isDev: false },
+    { id: 4, name: 'Standard User', description: 'Basic access to self-service and public company info', badgeColor: 'bg-gray-100 text-gray-600', isDev: false },
+  ]);
+
+  const [rolePermissions, setRolePermissions] = useState<Record<number, any>>({});
+
+  useEffect(() => {
+    const initial: Record<number, any> = {};
+    roles.forEach(role => {
+        initial[role.id] = {};
+        SYSTEM_MODULES.forEach(mod => {
+            initial[role.id][mod.id] = role.isDev ? [1, 2, 3, 4, 5] : [1];
+            if (mod.subItems) {
+                mod.subItems.forEach(sub => {
+                    initial[role.id][sub.id] = role.isDev ? [1, 2, 3, 4, 5] : [1];
+                });
+            }
+        });
+    });
+    setRolePermissions(initial);
+  }, [roles]);
 
   const [formData, setFormData] = useState({ name: '', position: '', email: '', avatar: '' });
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -78,10 +104,10 @@ export default function UserPermissions() {
     users.forEach(user => {
         initial[user.id] = {};
         SYSTEM_MODULES.forEach(mod => {
-            initial[user.id][mod.id] = user.isDev ? [1, 2, 3, 4] : [1];
+            initial[user.id][mod.id] = user.isDev ? [1, 2, 3, 4, 5] : [1];
             if (mod.subItems) {
                 mod.subItems.forEach(sub => {
-                    initial[user.id][sub.id] = user.isDev ? [1, 2, 3, 4] : [1];
+                    initial[user.id][sub.id] = user.isDev ? [1, 2, 3, 4, 5] : [1];
                 });
             }
         });
@@ -91,6 +117,19 @@ export default function UserPermissions() {
 
   const toggleConfidentiality = (id: string) => {
     setConfidentialityMap(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleRolePermission = (roleId: number, modId: string, level: number) => {
+    setRolePermissions(prev => {
+      const currentLevels = (prev[roleId]?.[modId] as number[]) || [];
+      let newLevels: number[];
+      if (level === 0) newLevels = [];
+      else {
+        if (currentLevels.includes(level)) newLevels = currentLevels.filter(l => l !== level);
+        else newLevels = [...currentLevels, level].filter(l => l !== 0);
+      }
+      return { ...prev, [roleId]: { ...prev[roleId], [modId]: newLevels } };
+    });
   };
 
   const handleEditUser = (user: any) => {
@@ -160,6 +199,9 @@ export default function UserPermissions() {
           <div className="flex bg-[#4F868C]/10 p-1 rounded-xl border border-[#4F868C]/20 shadow-inner">
             <button onClick={() => setActiveTab('step1')} className={`px-5 py-2 text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-2 rounded-lg ${activeTab === 'step1' ? 'bg-[#141A26] text-white shadow-md' : 'text-[#4F868C] hover:bg-white/50'}`}>
                 <Lock size={14} /> Confidentiality
+            </button>
+            <button onClick={() => setActiveTab('step3')} className={`px-5 py-2 text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-2 rounded-lg ${activeTab === 'step3' ? 'bg-[#141A26] text-white shadow-md' : 'text-[#4F868C] hover:bg-white/50'}`}>
+                <Shield size={14} /> Roles
             </button>
             <button onClick={() => setActiveTab('step2')} className={`px-5 py-2 text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-2 rounded-lg ${activeTab === 'step2' ? 'bg-[#141A26] text-white shadow-md' : 'text-[#4F868C] hover:bg-white/50'}`}>
                 <UserCog size={14} /> Operational
@@ -367,6 +409,108 @@ export default function UserPermissions() {
                   </div>
                )}
             </div>
+          </div>
+        )}
+
+        {/* STEP 3: ROLE TEMPLATES */}
+        {activeTab === 'step3' && (
+          <div className="bg-white/90 backdrop-blur-xl rounded-none shadow-sm border border-[#141A26]/10 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 min-h-[600px]">
+             <div className="px-6 py-4 border-b border-[#141A26]/10 flex flex-col lg:flex-row items-center justify-between gap-4 bg-[#141A26]/5">
+               <h3 className="text-sm font-black text-[#141A26] uppercase tracking-widest flex items-center gap-2">
+                 <Shield size={18} className="text-[#D95032]" /> Role Matrix
+               </h3>
+               <div className="relative flex-1 lg:max-w-md">
+                 <button className="bg-[#141A26] text-[#F2B705] px-4 py-2 rounded-xl text-[11px] font-black uppercase text-center w-full shadow-sm hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                    <Plus size={14} /> Create New Role
+                 </button>
+               </div>
+             </div>
+
+             <div className="flex-1 overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left border-collapse min-w-[1200px]">
+                   <thead>
+                      <tr>
+                         <th className="sticky left-0 z-20 min-w-[240px] minimal-th shadow-md">Module / Sub-Module</th>
+                         {roles.map(r => (
+                            <th key={r.id} className="minimal-th text-center min-w-[160px] border-l border-[#4F868C]/10">
+                               <div className="flex flex-col items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${r.badgeColor}`}>{r.name}</span>
+                                  <span className="text-[9px] font-medium text-[#9295A6] whitespace-normal leading-tight text-center max-w-[140px]">{r.description}</span>
+                               </div>
+                            </th>
+                         ))}
+                      </tr>
+                   </thead>
+                   <tbody className="text-[12px]">
+                      {SYSTEM_MODULES.map(mod => {
+                         const isExp = expandedModules[mod.id];
+                         return (
+                         <React.Fragment key={mod.id}>
+                           <tr 
+                             className="bg-[#F2F0EB]/50 hover:bg-[#E8E6E1] group border-b border-[#141A26]/5 cursor-pointer transition-colors"
+                             onClick={() => mod.subItems && toggleExpand(mod.id)}
+                           >
+                               <td className="sticky-col p-4 font-black text-[#141A26] uppercase tracking-tight flex items-center gap-2">
+                                   <mod.icon size={14} className={(confidentialityMap[mod.id] as any) ? "text-[#D91604]" : "text-[#F2B705]"} /> 
+                                   <span className="flex-1">{mod.label}</span>
+                                   {(confidentialityMap[mod.id] as any) && <Lock size={10} className="text-[#D91604]" />}
+                                   {mod.subItems && <ChevronDown size={14} className={`transition-transform text-[#4F868C] ml-auto ${isExp ? 'rotate-180' : ''}`} />}
+                               </td>
+                               {roles.map(r => (
+                                   <td key={r.id} className="text-center p-2 border-l border-[#141A26]/5">
+                                       <div className="flex justify-center gap-1 flex-wrap">
+                                           {PERMISSION_LEVELS.filter(pl => pl.level !== 0).map(p => {
+                                               const active = (rolePermissions[r.id]?.[mod.id] || []).includes(p.level);
+                                               return (
+                                                  <button 
+                                                    key={p.level} 
+                                                    onClick={() => toggleRolePermission(r.id, mod.id, p.level)}
+                                                    className={`w-6 h-6 rounded flex items-center justify-center transition-all ${active ? 'shadow-sm hover:scale-105' : 'opacity-20 grayscale hover:opacity-100'}`} 
+                                                    style={{backgroundColor: active ? p.bg : '#F2F0EB'}} 
+                                                    title={p.label}
+                                                  >
+                                                    <p.icon size={11} style={{color: active ? p.color : '#4F868C'}}/>
+                                                  </button>
+                                               );
+                                           })}
+                                       </div>
+                                   </td>
+                               ))}
+                           </tr>
+                           {mod.subItems && isExp && mod.subItems.map(sub => (
+                               <tr key={sub.id} className="bg-white hover:bg-[#F2F0EB]/80 group border-b border-[#141A26]/5 animate-in slide-in-from-top-1 duration-200">
+                                   <td className="sticky-col p-3 pl-10 font-bold text-[#4F868C] uppercase text-[10px] flex items-center gap-2">
+                                       <div className="w-1.5 h-1.5 rounded-full bg-[#D95032]"></div> {sub.label}
+                                       {(confidentialityMap[sub.id] as any) && <Lock size={10} className="text-[#D91604]" />}
+                                   </td>
+                                   {roles.map(r => (
+                                       <td key={r.id} className="text-center p-1 border-l border-[#141A26]/5">
+                                           <div className="flex justify-center gap-1 flex-wrap">
+                                               {PERMISSION_LEVELS.filter(pl => pl.level !== 0).map(p => {
+                                                   const active = (rolePermissions[r.id]?.[sub.id] || []).includes(p.level);
+                                                   return (
+                                                      <button 
+                                                        key={p.level} 
+                                                        onClick={() => toggleRolePermission(r.id, sub.id, p.level)}
+                                                        className={`w-5 h-5 rounded flex items-center justify-center transition-all ${active ? 'shadow-sm hover:scale-105' : 'opacity-20 grayscale hover:opacity-100'}`} 
+                                                        style={{backgroundColor: active ? p.bg : '#F2F0EB'}} 
+                                                        title={p.label}
+                                                      >
+                                                        <p.icon size={10} style={{color: active ? p.color : '#4F868C'}}/>
+                                                      </button>
+                                                   );
+                                               })}
+                                           </div>
+                                       </td>
+                                   ))}
+                               </tr>
+                           ))}
+                         </React.Fragment>
+                         )
+                      })}
+                   </tbody>
+                </table>
+             </div>
           </div>
         )}
       </div>

@@ -195,12 +195,15 @@ const KPICardLarge = ({ title, val, sub, icon, color }: any) => (
 
 // --- VIEWS ---
 
-const BatchExecutionView = ({ batches, activeStep, onOpenPlanner }: any) => {
+const BatchExecutionView = ({ batches, activeStep, onOpenPlanner, onFinishBatch }: any) => {
     const config = STEP_CONFIG[activeStep];
     const [qrData, setQrData] = useState<any>(null);
     const [simSpeed, setSimSpeed] = useState(1);
+    const [showCompleted, setShowCompleted] = useState(false);
 
     const totalProduced = 120; // Mock count
+
+    const displayBatches = showCompleted ? batches : batches.filter((b: any) => b.status !== 'Completed');
 
     const gridColsClass = activeStep === 'cutting' 
         ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 gap-4"
@@ -208,11 +211,11 @@ const BatchExecutionView = ({ batches, activeStep, onOpenPlanner }: any) => {
 
     const renderGrid = () => (
         <div className={gridColsClass}>
-            {batches.map((batch: any) => {
+            {displayBatches.map((batch: any) => {
                 const progress = ((batch.totalTime - batch.timeLeft) / batch.totalTime) * 100;
                 return (
                     <div key={batch.id} 
-                        className="sys-card-base p-3 relative group flex flex-col h-[180px]"
+                        className={`sys-card-base p-3 relative group flex flex-col h-[180px] ${batch.status === 'Completed' ? 'opacity-60 saturate-50 bg-slate-50' : ''}`}
                     >
                         <div className="flex justify-between items-start mb-2 gap-2">
                             <div className="flex flex-col flex-1 min-w-0">
@@ -227,25 +230,31 @@ const BatchExecutionView = ({ batches, activeStep, onOpenPlanner }: any) => {
                         <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 mb-3 shadow-inner">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-[11px] font-bold uppercase text-slate-400">Status</span>
-                                <span className={`text-[11px] font-black uppercase ${batch.status === 'Processing' ? 'text-emerald-600 animate-pulse' : 'text-slate-500'}`}>{batch.status}</span>
+                                <span className={`text-[11px] font-black uppercase ${batch.status === 'Processing' ? 'text-emerald-600 animate-pulse' : batch.status === 'Completed' ? 'text-blue-600' : 'text-slate-500'}`}>{batch.status}</span>
                             </div>
                             <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mb-1.5">
-                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${progress}%` }}></div>
+                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${progress}%`, backgroundColor: batch.status === 'Completed' ? '#3b82f6' : '' }}></div>
                             </div>
                             <div className="text-right text-[11px] font-mono font-bold text-slate-500">
                                 {Math.floor(batch.timeLeft / 60)}:{String(batch.timeLeft % 60).padStart(2, '0')} Left
                             </div>
                         </div>
                         <div className="flex gap-1.5 mt-auto">
-                            <button className="flex-1 bg-white border border-slate-200 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all hover:bg-slate-50 flex items-center justify-center gap-1.5 shadow-sm active:scale-95" style={{ color: config.color }}>
-                                <Icons.CheckCircle size={12}/> FINISH
-                            </button>
+                            {batch.status !== 'Completed' ? (
+                                <button onClick={() => onFinishBatch(batch.id)} className="flex-1 bg-white border border-slate-200 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all hover:bg-slate-50 flex items-center justify-center gap-1.5 shadow-sm active:scale-95" style={{ color: config.color }}>
+                                    <Icons.CheckCircle size={12}/> FINISH
+                                </button>
+                            ) : (
+                                <div className="flex-1 border bg-slate-100 border-slate-200 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-center shadow-inner">
+                                    FINISHED
+                                </div>
+                            )}
                             <button onClick={() => setQrData(batch)} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-lg shadow-sm shrink-0 hover:bg-slate-50 transition-colors"><Icons.QrCode size={14} className="text-slate-400"/></button>
                         </div>
                     </div>
                 );
             })}
-            {batches.length === 0 && (
+            {displayBatches.length === 0 && (
                 <div className="col-span-full py-16 text-center opacity-40 flex flex-col items-center">
                     <Icons.Inbox size={40} className="mb-3 text-slate-400" />
                     <p className="font-black uppercase tracking-widest text-[11px] text-slate-500">No active batches in this stage</p>
@@ -280,8 +289,12 @@ const BatchExecutionView = ({ batches, activeStep, onOpenPlanner }: any) => {
                         {config.label} PROCESS BOARD
                     </h3>
                     <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase cursor-pointer">
+                            <input type="checkbox" checked={showCompleted} onChange={(e) => setShowCompleted(e.target.checked)} className="rounded text-primary focus:ring-primary" />
+                            Show Completed
+                        </label>
                         <span className="text-[11px] font-black text-primary bg-white px-3 py-1.5 rounded-lg uppercase border border-slate-200 shadow-sm whitespace-nowrap">
-                            {batches.length} ACTIVE BATCHES
+                            {displayBatches.length} ACTIVE BATCHES
                         </span>
                         <button onClick={onOpenPlanner} className="sys-btn-primary py-1.5 px-3 flex items-center gap-1.5">
                             <Icons.Plus size={14} /> NEW MIXING
@@ -464,6 +477,11 @@ export default function DailyBoard() {
     const [isPlannerOpen, setIsPlannerOpen] = useState(false);
     const [batches, setBatches] = useState(INITIAL_BATCHES);
 
+    const handleFinishBatch = (batchId: string) => {
+        setBatches(prev => prev.map(b => b.id === batchId ? { ...b, status: 'Completed', timeLeft: 0 } : b));
+        if ((window as any).Swal) (window as any).Swal.fire({ icon: 'success', title: 'Batch Finished', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+    };
+
     return (
         <div className="flex flex-col min-h-0 h-full w-full font-sans">
             
@@ -538,7 +556,7 @@ export default function DailyBoard() {
                     )}
 
                     {activeView === 'execution' ? (
-                        <BatchExecutionView batches={batches.filter(b => b.step === activeTab)} activeStep={activeTab} onOpenPlanner={() => setIsPlannerOpen(true)} />
+                        <BatchExecutionView batches={batches.filter(b => b.step === activeTab)} activeStep={activeTab} onOpenPlanner={() => setIsPlannerOpen(true)} onFinishBatch={handleFinishBatch} />
                     ) : activeView === 'waiting' ? (
                         <SFGWaitingView />
                     ) : (

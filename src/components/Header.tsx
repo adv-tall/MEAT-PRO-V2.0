@@ -36,10 +36,9 @@ export default function Header() {
         <div className="text-[#ab8a3b] p-1 border border-[#ab8a3b]/20 rounded-md">
           <Box size={22} strokeWidth={2} />
         </div>
-        <div className="flex items-center gap-1.5 text-base font-black tracking-widest uppercase">
-          <span className="text-[#111f42]">WMS</span>
-          <span className="text-[#E3624A]">MASTER</span>
-          <span className="text-[#111f42]">CORE</span>
+        <div className="flex items-center gap-1.5 text-sm font-black tracking-widest uppercase">
+          <span className="text-[#111f42]">INTELLIGENCE MEAT</span>
+          <span className="text-[#E3624A]">PRODUCTION</span>
         </div>
       </div>
 

@@ -1,172 +1,68 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import * as Icons from 'lucide-react';
+import { INITIAL_CATEGORIES, MOCK_STANDARDS } from './data';
+import { getCategoryStyle, getStatusStyle } from './helpers';
+import { UserGuidePanel, GuideTrigger } from './components/UserGuidePanel';
+import { CsvUploadModal } from './components/CsvUploadModal';
+import { ConfigModal } from './components/ConfigModal';
 
-const INITIAL_CATEGORIES = ['Sausage', 'Meatball', 'Ham', 'Bologna', 'WIP-Emulsion', 'All'];
-const MOCK_STANDARDS = [
-    {
-        id: 'STD-001', name: 'Standard Smoked Sausage', category: 'Sausage', rawWeightPerBatch: 150, yieldPercent: 88.5, status: 'Active', updateDate: '26/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Standard Pork', batchPerCycle: 1, cycleTimeMin: 15, yieldPercent: 100 }],
-        formingStandards: [{ id: 1, batter: 'Standard Pork', size: 'Jumbo', type: 'Twist Linker', casing: 'Cellulose', stuffed: true, capacityKgHr: 2000 }],
-        cookingStandards: [{ id: 1, oven: 'Smoke House 6T', program: 'Smoke_Std', cycleTimeMin: 120, capacityBatch: 10 }],
-        coolingStandards: [{ id: 1, unit: 'Rapid Chill Tunnel', program: 'Shower_Fast', cycleTimeMin: 60, capacityBatch: 10 }],
-        peelingStandards: [{ id: 1, method: 'Machine Only', capacityKgHr: 1500 }],
-        cuttingStandards: [],
-        packingStandards: [{ id: 1, machine: 'Thermoformer', packSize: '1kg', format: 'Bag', sfgSize: 'Jumbo', capacityKgHr: 1000 }],
-        packVariants: []
-    },
-    {
-        id: 'STD-002', name: 'Premium Meatball', category: 'Meatball', rawWeightPerBatch: 100, yieldPercent: 95, status: 'Active', updateDate: '25/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Bowl Cutter 200L', batter: 'Premium Beef', batchPerCycle: 1, cycleTimeMin: 12, yieldPercent: 100 }],
-        formingStandards: [{ id: 1, batter: 'Premium Beef', size: 'M', type: 'Belt Former', casing: '', stuffed: false, capacityKgHr: 1500 }],
-        cookingStandards: [{ id: 1, oven: 'Smoke House 4T', program: 'Steam_01', cycleTimeMin: 60, capacityBatch: 8 }],
-        coolingStandards: [{ id: 1, unit: 'Shower Tunnel', program: 'Chill_Std', cycleTimeMin: 40, capacityBatch: 8 }],
-        peelingStandards: [],
-        cuttingStandards: [],
-        packingStandards: [{ id: 1, machine: 'Flow Pack', packSize: '500g', format: 'Bag', sfgSize: 'M', capacityKgHr: 800 }],
-        packVariants: []
-    },
-    {
-        id: 'BAT-SMC-01', name: 'Batter ไส้กรอกรมควัน (Smoked)', category: 'WIP-Emulsion', rawWeightPerBatch: 150, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Smoked Formula', batchPerCycle: 1, cycleTimeMin: 15, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-MTB-02', name: 'Batter ลูกชิ้นหมู (Pork Meatball)', category: 'WIP-Emulsion', rawWeightPerBatch: 100, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Bowl Cutter 200L', batter: 'Pork Meatball Formula', batchPerCycle: 1, cycleTimeMin: 12, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-BOL-04', name: 'Batter โบโลน่า (Bologna)', category: 'WIP-Emulsion', rawWeightPerBatch: 150, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Bologna Formula', batchPerCycle: 1, cycleTimeMin: 15, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-CHE-09', name: 'Batter ไส้กรอกชีส (Cheese)', category: 'WIP-Emulsion', rawWeightPerBatch: 150, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Cheese Sausage Formula', batchPerCycle: 1, cycleTimeMin: 15, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-SND-20', name: 'Batter แฮมแซนวิช (Sandwich Ham)', category: 'WIP-Emulsion', rawWeightPerBatch: 150, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Sandwich Ham Formula', batchPerCycle: 1, cycleTimeMin: 20, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-001', name: 'Smoked Batter', category: 'WIP-Emulsion', rawWeightPerBatch: 150, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Smoked Formula', batchPerCycle: 1, cycleTimeMin: 15, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-002', name: 'Meatball Batter', category: 'WIP-Emulsion', rawWeightPerBatch: 100, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Bowl Cutter 200L', batter: 'Meatball Formula', batchPerCycle: 1, cycleTimeMin: 12, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-003', name: 'Bologna Batter', category: 'WIP-Emulsion', rawWeightPerBatch: 150, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Bologna Formula', batchPerCycle: 1, cycleTimeMin: 15, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-004', name: 'Cheese Batter', category: 'WIP-Emulsion', rawWeightPerBatch: 150, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Cheese Formula', batchPerCycle: 1, cycleTimeMin: 15, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-005', name: 'Sandwich Ham Batter', category: 'WIP-Emulsion', rawWeightPerBatch: 150, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Sandwich Ham Formula', batchPerCycle: 1, cycleTimeMin: 20, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-006', name: 'Layer Batter Red', category: 'WIP-Emulsion', rawWeightPerBatch: 100, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Bowl Cutter 200L', batter: 'Red Layer Formula', batchPerCycle: 1, cycleTimeMin: 10, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-007', name: 'Layer Batter Green', category: 'WIP-Emulsion', rawWeightPerBatch: 100, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Bowl Cutter 200L', batter: 'Green Layer Formula', batchPerCycle: 1, cycleTimeMin: 10, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'BAT-008', name: 'Filling Cheese', category: 'WIP-Emulsion', rawWeightPerBatch: 50, yieldPercent: 100, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Filling Cheese Formula', batchPerCycle: 1, cycleTimeMin: 10, yieldPercent: 100 }],
-        formingStandards: [], cookingStandards: [], coolingStandards: [], peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'SFG-001', name: 'Smoked Sausage SFG', category: 'Sausage', rawWeightPerBatch: 150, yieldPercent: 88.5, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [], 
-        formingStandards: [{ id: 1, batter: 'Smoked Batter', size: 'M', type: 'Twist Linker', casing: 'Cellulose', stuffed: true, capacityKgHr: 2000 }],
-        cookingStandards: [{ id: 1, oven: 'Smoke House 6T', program: 'Smoke_Std', cycleTimeMin: 120, capacityBatch: 10 }],
-        coolingStandards: [{ id: 1, unit: 'Rapid Chill Tunnel', program: 'Shower_Fast', cycleTimeMin: 60, capacityBatch: 10 }],
-        peelingStandards: [{ id: 1, method: 'Machine Only', capacityKgHr: 1500 }],
-        cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'SFG-002', name: 'Pork Meatball SFG', category: 'Meatball', rawWeightPerBatch: 100, yieldPercent: 95, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [],
-        formingStandards: [{ id: 1, batter: 'Meatball Batter', size: 'M', type: 'Belt Former', casing: '', stuffed: false, capacityKgHr: 1500 }],
-        cookingStandards: [{ id: 1, oven: 'Smoke House 4T', program: 'Steam_01', cycleTimeMin: 60, capacityBatch: 8 }],
-        coolingStandards: [{ id: 1, unit: 'Shower Tunnel', program: 'Chill_Std', cycleTimeMin: 40, capacityBatch: 8 }],
-        peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'SFG-003', name: 'Bologna SFG', category: 'Bologna', rawWeightPerBatch: 150, yieldPercent: 92, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [],
-        formingStandards: [{ id: 1, batter: 'Bologna Batter', size: 'L', type: 'Clipper Direct', casing: 'Polyamide', stuffed: true, capacityKgHr: 1800 }],
-        cookingStandards: [{ id: 1, oven: 'Smoke House 6T', program: 'Steam_01', cycleTimeMin: 150, capacityBatch: 10 }],
-        coolingStandards: [{ id: 1, unit: 'Shower Tunnel', program: 'Chill_Std', cycleTimeMin: 90, capacityBatch: 10 }],
-        peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'SFG-004', name: 'Cheese Sausage SFG', category: 'Sausage', rawWeightPerBatch: 150, yieldPercent: 89, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [],
-        formingStandards: [{ id: 1, batter: 'Cheese Batter', size: 'M', type: 'Twist Linker', casing: 'Cellulose', stuffed: true, capacityKgHr: 1900 }],
-        cookingStandards: [{ id: 1, oven: 'Smoke House 6T', program: 'Smoke_Std', cycleTimeMin: 120, capacityBatch: 10 }],
-        coolingStandards: [{ id: 1, unit: 'Rapid Chill Tunnel', program: 'Shower_Fast', cycleTimeMin: 60, capacityBatch: 10 }],
-        peelingStandards: [{ id: 1, method: 'Machine Only', capacityKgHr: 1500 }],
-        cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'SFG-005', name: 'Sandwich Ham SFG', category: 'Ham', rawWeightPerBatch: 150, yieldPercent: 98, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [],
-        formingStandards: [{ id: 1, batter: 'Sandwich Ham Batter', size: 'Jumbo', type: 'Clipper Direct', casing: 'Polyamide', stuffed: true, capacityKgHr: 1200 }],
-        cookingStandards: [{ id: 1, oven: 'Smoke House 6T', program: 'Steam_01', cycleTimeMin: 180, capacityBatch: 10 }],
-        coolingStandards: [{ id: 1, unit: 'Shower Tunnel', program: 'Chill_Std', cycleTimeMin: 120, capacityBatch: 10 }],
-        peelingStandards: [], cuttingStandards: [], packingStandards: [], packVariants: []
-    },
-    {
-        id: 'STD-003', name: 'Bologna Chili', category: 'Bologna', rawWeightPerBatch: 150, yieldPercent: 98, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Bologna Chili Formula', batchPerCycle: 1, cycleTimeMin: 20, yieldPercent: 100 }],
-        formingStandards: [{ id: 1, batter: 'Bologna Chili', size: 'Large', type: 'Clipper', casing: 'Plastic', stuffed: true, capacityKgHr: 1500 }],
-        cookingStandards: [{ id: 1, oven: 'Steam Oven', program: 'Steam_85C', cycleTimeMin: 180, capacityBatch: 12 }],
-        coolingStandards: [{ id: 1, unit: 'Chilled Water Tank', program: 'Water_Chill', cycleTimeMin: 90, capacityBatch: 12 }],
-        peelingStandards: [{ id: 1, method: 'Manual Peeling', capacityKgHr: 500 }],
-        cuttingStandards: [{ id: 1, machine: 'High Speed Slicer', thicknessMm: 2, capacityKgHr: 800 }],
-        packingStandards: [{ id: 1, machine: 'Thermoformer', packSize: '200g', format: 'Vacuum Pack', sfgSize: 'Sliced', capacityKgHr: 600 }],
-        packVariants: []
-    },
-    {
-        id: 'STD-004', name: 'Cheese Sausage', category: 'Sausage', rawWeightPerBatch: 150, yieldPercent: 92, status: 'Active', updateDate: '27/02/2025',
-        mixingStandards: [{ id: 1, machine: 'Vacuum Mixer', batter: 'Cheese Sausage Formula', batchPerCycle: 1, cycleTimeMin: 15, yieldPercent: 100 }],
-        formingStandards: [{ id: 1, batter: 'Cheese Formula', size: 'Standard', type: 'Co-Extrusion', casing: 'Collagen', stuffed: true, capacityKgHr: 1800 }],
-        cookingStandards: [{ id: 1, oven: 'Smoke House 6T', program: 'Smoke_Cheese', cycleTimeMin: 100, capacityBatch: 10 }],
-        coolingStandards: [{ id: 1, unit: 'Rapid Chill Tunnel', program: 'Shower_Std', cycleTimeMin: 60, capacityBatch: 10 }],
-        peelingStandards: [],
-        cuttingStandards: [],
-        packingStandards: [{ id: 1, machine: 'Thermoformer', packSize: '500g', format: 'Bag', sfgSize: 'Standard', capacityKgHr: 900 }],
-        packVariants: []
-    }
-];
+const IS_DEMO = false;
+
+// --- Global Styles (Synced with Theme) ---
+const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --font-mixed: 'JetBrains Mono', 'Noto Sans Thai', sans-serif;
+  }
+
+  * { 
+    font-family: var(--font-mixed); 
+    box-sizing: border-box;
+  }
+
+  html, body { 
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(46, 57, 95, 0.1); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(194, 45, 46, 0.5); }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+`;
 
 export default function STDProcess() {
     const [searchTerm, setSearchQuery] = useState('');
-    const [masterData, setMasterData] = useState([]);
+    const [masterData, setMasterData] = useState<any[]>([]);
     const [filterCategory, setFilterCategory] = useState('All');
-    
+    const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+    const [modalConfig, setModalConfig] = useState({ isOpen: false, mode: 'view', data: null });
+    const [csvModalOpen, setCsvModalOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [showGuide, setShowGuide] = useState(false);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+
+    // Mock Data Loading
     useEffect(() => {
-        setMasterData(MOCK_STANDARDS as any);
+        const load = () => {
+            setLoading(true);
+            setTimeout(() => {
+                setMasterData(MOCK_STANDARDS);
+                setLoading(false);
+            }, 600);
+        };
+        load();
     }, []);
 
     const filteredData = useMemo(() => {
-        return masterData.filter((item: any) => {
+        return masterData.filter(item => {
             const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                   item.id.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
@@ -174,133 +70,257 @@ export default function STDProcess() {
         });
     }, [searchTerm, masterData, filterCategory]);
 
-    return (
-        <div className="w-full relative flex flex-col h-full min-h-0">
-            {/* Header Area */}
-            <header className="pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 shrink-0 z-10 relative">
-                <div className="flex items-center gap-4">
-                    <div className="sys-header-icon-box">
-                        <Icons.Timer className="sys-header-icon" />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                        <h1 className="sys-title-main">
-                            STD <span className="text-accent">PROCESS TIME</span>
-                        </h1>
-                        <p className="sys-title-sub uppercase tracking-[0.25em]">
-                            Configure Production Standards & Routing
-                        </p>
-                    </div>
-                </div>
-            </header>
+    const handleDelete = (id: string) => {
+        const Swal = typeof window !== 'undefined' ? (window as any).Swal : null;
+        if(Swal) {
+            Swal.fire({ title: 'Are you sure?', text: "You won't be able to revert this!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#C22D2E', confirmButtonText: 'Yes, delete it!' }).then((result: any) => { 
+                if (result.isConfirmed) { 
+                    setMasterData(masterData.filter(item => item.id !== id)); 
+                    Swal.fire({icon: 'success', title: 'Deleted!', text: 'Record deleted.', timer: 1500, showConfirmButton: false}); 
+                } 
+            });
+        } else {
+            if(window.confirm('Are you sure you want to delete this record?')) {
+                setMasterData(masterData.filter(item => item.id !== id));
+            }
+        }
+    };
 
-            <main className="sys-page-layout flex flex-col flex-1 min-h-0">
-                <div className="sys-table-card flex flex-col flex-1 shadow-soft">
-                    {/* Toolbar */}
-                    <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center bg-white gap-4">
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <select 
-                                value={filterCategory} 
-                                onChange={(e) => setFilterCategory(e.target.value)} 
-                                className="sys-input cursor-pointer min-w-[200px]"
-                            >
-                                {INITIAL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        </div>
-                        <div className="relative w-full md:w-80 group">
-                            <Icons.Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
-                            <input 
-                                type="text" 
-                                placeholder="Search Standard ID, Name..." 
-                                value={searchTerm} 
-                                onChange={(e) => setSearchQuery(e.target.value)} 
-                                className="sys-input w-full pl-12 pr-4 py-2" 
-                            />
-                        </div>
-                        <button className="sys-btn-primary shrink-0 self-end md:self-auto hidden md:flex">
-                            <Icons.Plus size={14} /> NEW STANDARD
-                        </button>
-                    </div>
+    const handleSave = (newItem: any) => {
+        if (modalConfig.data) {
+             setMasterData(masterData.map(i => i.id === newItem.id ? { ...newItem, updateDate: new Date().toLocaleDateString('en-GB') } : i));
+        } else {
+             const newId = `STD-${Date.now().toString().slice(-6)}`;
+             setMasterData([{ ...newItem, id: newId, updateDate: new Date().toLocaleDateString('en-GB') }, ...masterData]);
+        }
+    };
 
-                    {/* Table */}
-                    <div className="flex-1 overflow-auto custom-scrollbar bg-slate-50">
-                        <table className="w-full text-left min-w-[1000px] border-collapse bg-white">
-                            <thead className="sys-table-header sticky top-0 z-10">
-                                <tr>
-                                    <th className="py-4 px-6 sys-table-th">Standard ID</th>
-                                    <th className="py-4 px-6 sys-table-th">Name</th>
-                                    <th className="py-4 px-6 sys-table-th">Category</th>
-                                    <th className="py-4 px-6 sys-table-th text-right">Batch Size (kg)</th>
-                                    <th className="py-4 px-6 sys-table-th text-center">Yield</th>
-                                    <th className="py-4 px-6 sys-table-th text-center">Status</th>
-                                    <th className="py-4 px-6 sys-table-th text-right w-24">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {filteredData.map((item: any) => (
-                                    <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
-                                        <td className="py-3 px-6">
-                                            <span className="font-mono font-bold text-accent text-sm">
-                                                {item.id}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-6 sys-table-td">
-                                            <div className="font-bold text-primary">{item.name}</div>
-                                            <div className="text-[10px] text-slate-400 mt-0.5">Updated: {item.updateDate}</div>
-                                        </td>
-                                        <td className="py-3 px-6">
-                                            <span className="sys-badge bg-slate-100 text-slate-500 border-slate-200">{item.category}</span>
-                                        </td>
-                                        <td className="py-3 px-6 text-right">
-                                            <span className="font-mono font-bold text-primary text-sm">{item.rawWeightPerBatch}</span>
-                                        </td>
-                                        <td className="py-3 px-6 text-center">
-                                            <div className="flex flex-col items-center gap-1.5 w-full max-w-[80px] mx-auto">
-                                                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${item.yieldPercent}%` }}></div>
-                                                </div>
-                                                <span className="font-mono font-bold text-accent text-xs leading-none">{item.yieldPercent}%</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-6 text-center">
-                                            <span className={`sys-badge ${item.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-                                                {item.status}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-6 text-right">
-                                            <div className="flex justify-end gap-0.5 transition-opacity">
-                                                <button className="sys-btn-action">
-                                                    <Icons.Eye size={14} />
-                                                </button>
-                                                <button className="sys-btn-action hover:text-accent hover:border-accent">
-                                                    <Icons.Pencil size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {filteredData.length === 0 && (
-                                    <tr>
-                                        <td colSpan={7} className="py-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
-                                            No Data Found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    {/* Pagination */}
-                    <div className="sys-pagination-container">
-                        <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total {filteredData.length} Items</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button className="sys-pagination-btn" disabled><Icons.ChevronLeft size={16} /></button>
-                            <button className="sys-pagination-btn px-4 bg-primary text-white pointer-events-none text-xs font-mono">1</button>
-                            <button className="sys-pagination-btn" disabled><Icons.ChevronRight size={16} /></button>
-                        </div>
-                    </div>
-                </div>
-            </main>
+    const handleCsvUpload = (newItems: any[]) => {
+        const updated = [...masterData];
+        newItems.forEach(ni => {
+            const idx = updated.findIndex(u => u.id === ni.id);
+            if (idx >= 0) updated[idx] = ni; else updated.unshift(ni); // Add new to top
+        });
+        setMasterData(updated);
+    };
+
+    // Pagination
+    useEffect(() => { setCurrentPage(1); }, [searchTerm, filterCategory, itemsPerPage]);
+    const MathCeil = Math.ceil;
+    const MathMax = Math.max;
+    const MathMin = Math.min;
+    
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = MathCeil(filteredData.length / itemsPerPage);
+
+    if(loading) return (
+        <div className="flex h-screen w-full items-center justify-center bg-transparent" style={{ background: `linear-gradient(135deg, #F2F4F6 0%, #E6E1DB 100%)` }}>
+            <div className="flex flex-col items-center gap-4">
+                <Icons.Loader2 size={48} className="animate-spin text-[#C22D2E]" />
+                <span className="text-[#2E395F] font-black uppercase tracking-widest text-sm animate-pulse">Loading STD Data...</span>
+            </div>
         </div>
     );
-}
+
+    return (
+        <>
+            <style>{globalStyles}</style>
+            <div className="flex flex-col h-full w-full text-[#2E395F] relative font-sans">
+                
+                <GuideTrigger onClick={() => setShowGuide(true)} />
+                <UserGuidePanel isOpen={showGuide} onClose={() => setShowGuide(false)} />
+                <CsvUploadModal isOpen={csvModalOpen} onClose={() => setCsvModalOpen(false)} onUpload={handleCsvUpload} />
+                <ConfigModal 
+                    isOpen={modalConfig.isOpen} 
+                    onClose={() => setModalConfig({ ...modalConfig, isOpen: false, data: null })} 
+                    data={modalConfig.data} 
+                    mode={modalConfig.mode}
+                    onSave={handleSave} 
+                    categories={categories}
+                />
+
+                {/* Header Bar */}
+                <header className="pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0 animate-fadeIn">
+                    <div className="flex items-center gap-4 shrink-0">
+                        <div className="w-12 h-12 bg-white flex items-center justify-center shadow-sm border border-[#E6E1DB] rounded-xl text-[#2E395F]">
+                            <Icons.Settings2 size={24} strokeWidth={2} />
+                        </div>
+                        <div className="flex flex-col justify-center leading-none">
+                            <h1 className="text-2xl font-black tracking-tight uppercase flex gap-2">
+                                <span className="text-[#2E395F]">STD</span>
+                                <span className="text-[#C22D2E]">PROCESS</span>
+                            </h1>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.3em] mt-1.5 text-[#55738D]">Configure Production Standards & Routing</p>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="w-full flex flex-col relative z-10 animate-fadeIn">
+                        {/* TOOLBAR */}
+                        <div className="px-6 py-4 flex flex-col md:flex-row justify-between items-center bg-transparent shrink-0 gap-4 mb-2">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-[12px] font-black text-[#2E395F] uppercase tracking-widest">
+                                    <Icons.List size={16} className="text-[#C22D2E]"/>
+                                    <span>Process Standards</span>
+                                </div>
+                                <span className="text-[#E6E1DB]">|</span>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-[#737597] bg-[#E6E1DB] px-2 py-1 rounded-sm">{filteredData.length} Records</div>
+                            </div>
+                            <div className="flex gap-3 w-full md:w-auto items-center">
+                                <div className="relative group">
+                                    <Icons.Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#55738D] group-hover:text-[#C22D2E] transition-colors" />
+                                    <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="pl-9 pr-8 py-2 border border-[#B2CADE]/50 rounded-xl text-[12px] font-bold bg-white focus:border-[#C22D2E] outline-none cursor-pointer transition-all text-[#2E395F] shadow-sm appearance-none h-10">
+                                        <option value="All">All Categories</option>
+                                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                    <Icons.ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#55738D] pointer-events-none" />
+                                </div>
+                                <div className="relative flex-1 md:w-64">
+                                    <Icons.Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#55738D]"/>
+                                    <input type="text" placeholder="Search ID, Name..." value={searchTerm} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-[#B2CADE]/50 rounded-xl text-[12px] font-bold focus:outline-none focus:border-[#2E395F] bg-white shadow-sm text-[#2E395F] h-10" />
+                                </div>
+                                <button onClick={() => setCsvModalOpen(true)} className="bg-white border border-[#E6E1DB] hover:border-[#B2CADE] text-[#55738D] px-4 py-2 rounded-xl font-bold text-[12px] uppercase tracking-widest flex items-center gap-2 shadow-sm transition-colors hidden md:flex h-10"><Icons.Upload size={14} /> Import</button>
+                                <button onClick={() => {
+                                    if ((window as any).Swal) {
+                                        (window as any).Swal.fire({
+                                            icon: 'success',
+                                            title: 'AI Synced',
+                                            text: 'Process Standards have been synchronized with the AI Generator schedule.',
+                                            timer: 2000,
+                                            showConfirmButton: false
+                                        });
+                                    }
+                                }} className="bg-[#2E395F] hover:bg-[#1f2641] text-white px-4 py-2 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 whitespace-nowrap shrink-0 h-10">
+                                    <Icons.Bot size={14} className="text-[#DCBC1B]" /> Sync AI
+                                </button>
+                                <button onClick={() => setModalConfig({ isOpen: true, mode: 'edit', data: null as any })} className="bg-[#C22D2E] hover:bg-[#9E2C21] text-white px-5 py-2 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 whitespace-nowrap shrink-0 h-10">
+                                    <Icons.Plus size={14} /> New Standard
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* TABLE */}
+                        <div className="w-full flex flex-col bg-white border border-[#E6E1DB] rounded-xl shadow-sm overflow-hidden">
+                            <div className="w-full overflow-x-auto">
+                                <table className="w-full text-left min-w-[1000px] border-collapse">
+                                    <thead className="bg-[#C22D2E] border-b-[3px] border-[#2E395F] sticky top-0 z-10 text-white font-mono uppercase tracking-wider text-[12px] font-black">
+                                        <tr>
+                                            <th className="py-4 px-6 pl-8 w-[15%] whitespace-nowrap">Standard ID</th>
+                                            <th className="py-4 px-6 w-[25%] whitespace-nowrap">Standard Name</th>
+                                            <th className="py-4 px-6 w-[15%] whitespace-nowrap">Category</th>
+                                            <th className="py-4 px-6 w-[12%] text-right whitespace-nowrap">Batch Size</th>
+                                            <th className="py-4 px-6 w-[10%] text-center whitespace-nowrap">Yield</th>
+                                            <th className="py-4 px-6 w-[10%] text-center whitespace-nowrap">Status</th>
+                                            <th className="py-4 px-6 pr-8 text-right w-24 whitespace-nowrap">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white">
+                                        {currentItems.map((item: any) => (
+                                            <tr key={item.id} className="hover:bg-[#F2F4F6]/50 transition-colors border-b border-[#E6E1DB] group">
+                                                
+                                                {/* Col 1: ID */}
+                                                <td className="py-2 px-6 pl-8 align-middle">
+                                                    <span className="font-bold text-[#C22D2E] text-[12px] font-mono leading-tight bg-[#C22D2E]/10 px-2 py-0.5 rounded-md border border-[#C22D2E]/20 cursor-pointer hover:bg-[#C22D2E] hover:text-white transition-colors" onClick={() => setModalConfig({ isOpen: true, mode: 'view', data: item })}>
+                                                        {item.id}
+                                                    </span>
+                                                </td>
+
+                                                {/* Col 2: Name */}
+                                                <td className="py-2 px-6 align-middle">
+                                                    <div className="font-bold text-[#2E395F] text-[12px] leading-tight cursor-pointer hover:text-[#C22D2E] transition-colors" onClick={() => setModalConfig({ isOpen: true, mode: 'view', data: item })}>
+                                                        {item.name}
+                                                    </div>
+                                                </td>
+
+                                                {/* Col 3: Category */}
+                                                <td className="py-2 px-6 align-middle">
+                                                    <span className={`px-2.5 py-0.5 rounded-full border text-[11px] font-normal uppercase tracking-widest shadow-sm ${getCategoryStyle(item.category)}`}>
+                                                        {item.category}
+                                                    </span>
+                                                </td>
+
+                                                {/* Col 4: Batch Size (Row Layout) */}
+                                                <td className="py-2 px-6 align-middle text-right">
+                                                    <div className="flex items-baseline justify-end gap-1 whitespace-nowrap">
+                                                        <span className="font-mono font-black text-[#2E395F] text-[12px]">
+                                                            {item.rawWeightPerBatch}
+                                                        </span>
+                                                        <span className="text-[10px] text-[#737597] font-bold uppercase tracking-widest">
+                                                            KG
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                {/* Col 5: Yield */}
+                                                <td className="py-2 px-6 align-middle text-center">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div className="w-16 h-1.5 bg-[#E6E1DB] rounded-full overflow-hidden">
+                                                            <div className="h-full bg-[#537E72] rounded-full" style={{ width: `${item.yieldPercent}%` }}></div>
+                                                        </div>
+                                                        <span className="font-mono font-black text-[#537E72] text-[11px] leading-none">{item.yieldPercent}%</span>
+                                                    </div>
+                                                </td>
+                                                
+                                                {/* Col 6: Status */}
+                                                <td className="py-2 px-6 align-middle text-center">
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-normal uppercase tracking-widest shadow-sm border whitespace-nowrap ${getStatusStyle(item.status)}`}>
+                                                        {item.status.toUpperCase()}
+                                                    </span>
+                                                </td>
+
+                                                {/* Col 7: Action */}
+                                                <td className="py-2 px-6 pr-8 align-middle">
+                                                    <div className="flex justify-end gap-[0.5px]">
+                                                        <button onClick={() => setModalConfig({ isOpen: true, mode: 'edit', data: item })} className="w-7 h-7 flex items-center justify-center rounded-lg border border-transparent text-[#737597] hover:border-[#55738D] hover:text-[#2E395F] hover:bg-gray-50 transition-colors bg-transparent">
+                                                            <Icons.Pencil size={14} />
+                                                        </button>
+                                                        {!IS_DEMO && (
+                                                            <button onClick={() => handleDelete(item.id)} className="w-7 h-7 flex items-center justify-center rounded-lg border border-transparent text-[#C22D2E] hover:border-[#C22D2E] hover:bg-red-50 transition-colors bg-transparent">
+                                                                <Icons.Trash2 size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+
+                                            </tr>
+                                        ))}
+                                        {currentItems.length === 0 && (
+                                            <tr>
+                                                <td colSpan={7} className="py-12 text-center text-[#737597] font-bold uppercase tracking-widest text-[12px] opacity-50">
+                                                    No Records Found
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            {/* Pagination (Synced) */}
+                            <div className="p-4 bg-white/60 backdrop-blur-md border-t border-[#E6E1DB] flex justify-between items-center font-bold text-[#55738D] uppercase tracking-widest shrink-0 font-mono text-[10px]">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <span>SHOW:</span>
+                                        <select 
+                                            value={itemsPerPage} 
+                                            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} 
+                                            className="bg-white border border-[#B2CADE]/50 rounded-md px-2 py-1 outline-none focus:border-[#2E395F] text-[#2E395F] cursor-pointer"
+                                        >
+                                            {[5, 10, 20, 50].map(v => <option key={v} value={v}>{v}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>TOTAL {filteredData.length} ITEMS</div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <button onClick={() => setCurrentPage(prev => MathMax(prev - 1, 1))} disabled={currentPage === 1} className={`p-1.5 border border-[#B2CADE]/40 bg-white rounded-lg transition-all ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-[#F2F4F6] text-[#2E395F] shadow-sm'}`}><Icons.ChevronLeft size={16}/></button>
+                                    <div className="bg-white border border-[#B2CADE]/30 px-5 py-1.5 rounded-lg shadow-sm text-[#2E395F] font-black min-w-[120px] text-center uppercase tracking-widest">PAGE {currentPage} OF {totalPages || 1}</div>
+                                    <button onClick={() => setCurrentPage(prev => MathMin(prev + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0} className={`p-1.5 border border-[#B2CADE]/40 bg-white rounded-lg transition-all ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:bg-[#F2F4F6] text-[#2E395F] shadow-sm'}`}><Icons.ChevronRight size={16}/></button>
+                                </div>
+                            </div>
+                        </div>
+                </main>
+            </div>
+        </>
+    );
+};

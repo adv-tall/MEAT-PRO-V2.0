@@ -2,17 +2,19 @@ import {
     LayoutDashboard, Users, Clock, Sparkles, ShieldCheck, 
     GraduationCap, Target, UserPlus, Heart, BarChart3, 
     Database, CalendarDays, Settings, TerminalSquare,
-    CalendarClock, ClipboardList, AlertTriangle, Factory, Settings2
+    CalendarClock, ClipboardList, AlertTriangle, Factory, Settings2, Bot
 } from 'lucide-react';
 
 export const SYSTEM_MODULES = [
     { id: 'dashboard', label: 'DASHBOARD', icon: LayoutDashboard },
     { id: 'pro_calendar', label: 'PRO CALENDAR', icon: CalendarDays },
+    { id: 'ai_copilot', label: 'AI COPILOT', icon: Bot },
     { 
         id: 'planning', label: 'PLANNING', icon: CalendarClock, 
         subItems: [ 
             { id: 'plan_fr_planning', label: 'PLANNING (PL)' }, 
-            { id: 'plan_by_prod', label: 'PRODUCTION PLANNING' } 
+            { id: 'plan_by_prod', label: 'PRODUCTION PLANNING' },
+            { id: 'ai_planner_asst', label: 'AI PLANNER ASST.' }
         ] 
     },
     { 

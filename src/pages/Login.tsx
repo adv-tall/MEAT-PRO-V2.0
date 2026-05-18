@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { Lock, User as UserIcon, Loader2, Package, ArrowRight, Phone, Mail, Eye, EyeOff } from 'lucide-react';
+import { Lock, User as UserIcon, Loader2, Package, ArrowRight, Phone, Mail, Eye, EyeOff, Beef } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Login() {
@@ -24,7 +24,9 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('login', undefined, { employeeId, idCard });
+      const trimmedEmployeeId = employeeId.trim();
+      const trimmedIdCard = idCard.trim();
+      const response = await api.post('login', undefined, { employeeId: trimmedEmployeeId, idCard: trimmedIdCard });
       
       if (response.status === 'success' && response.data) {
         login(response.data);
@@ -56,12 +58,15 @@ export default function Login() {
           <div className="flex flex-col">
             {/* Top Logo */}
             <div className="flex items-center gap-4 text-white mb-16">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E3624A] shadow-lg shadow-[#E3624A]/20">
-                <Package size={20} className="text-white" strokeWidth={2.5} />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#111f42] to-slate-800 text-white shadow-lg border border-white/10">
+                <Beef size={24} strokeWidth={2.5} />
               </div>
-              <span className="text-[15px] font-bold tracking-[0.15em] hover:text-[#E3624A] transition-colors cursor-pointer">
-                ADVANCE MEAT FABRICATION
-              </span>
+              <div className="flex flex-col">
+              <div className="flex flex-col text-[14px] font-black tracking-tighter leading-none" style={{ fontFamily: 'var(--font-prompt)' }}>
+                  <span className="text-white">INTELLIGENCE MEAT</span>
+                  <span className="text-[#E3624A] underline decoration-2 underline-offset-4 mt-1">PRODUCTION SYSTEM</span>
+                </div>
+              </div>
             </div>
 
             {/* Main Branding */}
@@ -70,10 +75,13 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-[80px] font-black tracking-widest text-white leading-none mb-4 shadow-black/20 drop-shadow-xl">
+              <h1 
+                className="text-[80px] font-black tracking-tighter text-white leading-none mb-4 shadow-black/20 drop-shadow-xl"
+                style={{ fontFamily: 'var(--font-prompt)' }}
+              >
                 MEAT PRO
               </h1>
-              <h2 className="text-[26px] font-bold text-white mb-8 tracking-wide drop-shadow-md">
+              <h2 className="text-[26px] font-bold text-white mb-8 tracking-tight drop-shadow-md" style={{ fontFamily: 'var(--font-prompt)' }}>
                 Production Tracking System
               </h2>
               <p className="max-w-md text-[15px] leading-relaxed text-white/80 font-medium">
@@ -139,10 +147,25 @@ export default function Login() {
             transition={{ duration: 0.5 }}
             className="w-full max-w-[460px] rounded-[24px] bg-white/50 backdrop-blur-xl border-2 border-white/60 p-8 sm:p-12 shadow-[0_30px_60px_rgba(0,0,0,0.15)]"
           >
-            <div className="mb-10">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#E3624A] text-white mb-6 lg:hidden shadow-lg">
-                <Package size={24} strokeWidth={2.5} />
+            <div className="mb-10 lg:hidden flex flex-col items-center justify-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#111f42] to-slate-800 text-white shadow-lg border border-white/10 mb-4">
+                <Beef size={24} strokeWidth={2.5} />
               </div>
+              <div className="flex flex-col items-center justify-center mb-6">
+                <div className="flex flex-col items-center justify-center text-[14px] font-black tracking-tighter leading-none" style={{ fontFamily: 'var(--font-prompt)' }}>
+                  <span className="text-[#1a2035]">INTELLIGENCE MEAT</span>
+                  <span className="text-[#E3624A] underline decoration-2 underline-offset-4 mt-1">PRODUCTION SYSTEM</span>
+                </div>
+              </div>
+              <h2 className="text-[28px] font-bold text-[#1a2035] mb-2 tracking-tight text-center" style={{ fontFamily: 'var(--font-prompt)' }}>
+                Welcome back
+              </h2>
+              <p className="text-[14px] font-medium text-[#4a5568] leading-relaxed text-center">
+                Please enter your credentials to access the system.
+              </p>
+            </div>
+            
+            <div className="mb-10 hidden lg:block">
               <h2 className="text-[32px] font-bold text-[#1a2035] mb-3 tracking-wide">
                 Welcome back
               </h2>
@@ -225,8 +248,13 @@ export default function Login() {
               </button>
               
               <div className="mt-8 rounded-xl bg-white/60 p-5 text-center shadow-inner border border-white/60 backdrop-blur-sm">
-                <div className="font-bold text-[#1a2035] text-[13px] mb-1.5">Demo Credentials</div>
-                <div className="text-[13px] font-semibold text-slate-700">User: DEMO / Pass: DEMO123456789</div>
+                <div className="font-bold text-[#1a2035] text-[13px] mb-2">Demo Credentials</div>
+                <div className="text-[12px] font-semibold text-slate-700 space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-[#1a2035] font-bold">Operator:</span>
+                    <span>DEMO / DEMO123456789</span>
+                  </div>
+                </div>
               </div>
             </form>
           </motion.div>
