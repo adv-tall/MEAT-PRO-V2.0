@@ -169,6 +169,82 @@ const KPICard = ({ title, val, color, icon, desc, unit }: any) => (
   </div>
 );
 
+const MACHINE_CAPACITIES = [
+    { id: 'M1', name: 'Mixer A', type: 'Mixing', capacity: 30000, allocated: 25500, status: 'In Use' },
+    { id: 'M2', name: 'Mixer B', type: 'Mixing', capacity: 25000, allocated: 0, status: 'Idle' },
+    { id: 'F1', name: 'Forming Line 1', type: 'Forming', capacity: 40000, allocated: 38000, status: 'Online' },
+    { id: 'F2', name: 'Forming Line 2', type: 'Forming', capacity: 40000, allocated: 0, status: 'Under Maintenance' },
+    { id: 'P1', name: 'Packing Line 1', type: 'Packing', capacity: 50000, allocated: 42000, status: 'In Use' },
+    { id: 'P2', name: 'Packing Line 2', type: 'Packing', capacity: 30000, allocated: 12000, status: 'Online' },
+];
+
+const MachineCapacityBar = ({ name, type, capacity, allocated, status }: any) => {
+    const percentage = Math.min(100, Math.round((allocated / capacity) * 100));
+    let colorClass = 'bg-emerald-500';
+    let textColor = 'text-emerald-600';
+    let bgLight = 'bg-emerald-50';
+    
+    if (percentage > 90) {
+        colorClass = 'bg-rose-500';
+        textColor = 'text-rose-600';
+        bgLight = 'bg-rose-50';
+    } else if (percentage > 75) {
+        colorClass = 'bg-amber-500';
+        textColor = 'text-amber-600';
+        bgLight = 'bg-amber-50';
+    }
+
+    if (status === 'Under Maintenance' || status === 'Maintenance') {
+        colorClass = 'bg-rose-400';
+        textColor = 'text-rose-500';
+        bgLight = 'bg-rose-50';
+    }
+
+    const getStatusConfig = (s: string) => {
+        switch(s) {
+            case 'Online': return { color: 'bg-emerald-500', label: 'Online' };
+            case 'Idle': return { color: 'bg-amber-500', label: 'Idle' };
+            case 'In Use': return { color: 'bg-blue-500', label: 'In Use' };
+            case 'Under Maintenance':
+            case 'Maintenance': return { color: 'bg-rose-500', label: 'Maintenance' };
+            default: return { color: 'bg-slate-400', label: s };
+        }
+    };
+
+    const statusConfig = getStatusConfig(status);
+
+    return (
+        <div className="flex flex-col gap-2 relative">
+            {(status === 'Under Maintenance' || status === 'Maintenance') && (
+                <div className="absolute inset-x-0 -top-1 -bottom-1 bg-white/20 z-10 rounded-xl" />
+            )}
+            <div className="flex justify-between items-end">
+                <div>
+                     <div className="flex items-center gap-2 mb-1">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{type}</div>
+                        <div className="flex items-center gap-1 bg-white border border-slate-100 rounded-full px-1.5 py-0.5 shadow-sm">
+                            <div className={`w-1.5 h-1.5 rounded-full ${statusConfig.color} animate-pulse shadow-[0_0_5px_rgba(0,0,0,0.1)]`}></div>
+                            <span className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">{statusConfig.label}</span>
+                        </div>
+                     </div>
+                     <div className={`text-[13px] font-bold ${textColor} leading-none truncate max-w-[120px]`} title={name}>{name}</div>
+                </div>
+                <div className="text-right">
+                    <span className={`text-[14px] font-black ${textColor} font-mono leading-none`}>{percentage}%</span>
+                    <div className="text-[9px] font-bold text-slate-400 font-mono mt-0.5 leading-none">{(allocated/1000).toFixed(1)}k / {(capacity/1000).toFixed(1)}k Kg</div>
+                </div>
+            </div>
+            <div className={`h-2.5 w-full ${bgLight} rounded-full overflow-hidden border border-slate-200/50 shadow-inner`}>
+                <div 
+                    className={`h-full ${colorClass} transition-all duration-1000 ease-out relative sys-animate-shimmer`} 
+                    style={{ width: `${(status === 'Under Maintenance' || status === 'Maintenance') ? 100 : percentage}%`, opacity: (status === 'Under Maintenance' || status === 'Maintenance') ? 0.4 : 1 }}
+                >
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const StandardModalWrapper = ({ children, className }: any) => (
     <div className={`relative ${className}`} onClick={e => e.stopPropagation()}>
         {children}
@@ -344,6 +420,19 @@ export default function ProductionPlanning() {
                     <KPICard title="Flagship AFM" val={50000} unit="Kg" color={THEME.accent} icon="award" desc="Target 50T" />
                     <KPICard title="SFG Buffer" val={totalSummary.sfg} unit="Kg" color={THEME.warning} icon="layers" desc="WIP" />
                     <KPICard title="Daily Batter" val={Math.ceil(totalSummary.batter)} unit="Kg" color={THEME.success} icon="chef-hat" desc="Mixing" />
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 shrink-0 flex flex-col gap-5 mt-2 mb-2">
+                     <div className="flex items-center justify-between">
+                         <h3 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                              <Icons.Activity size={16} className="text-accent" /> Machine Load Allocation
+                         </h3>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                        {MACHINE_CAPACITIES.map(mc => (
+                            <MachineCapacityBar key={mc.id} {...mc} />
+                        ))}
+                     </div>
                 </div>
 
                 <div className="sys-table-card flex flex-col flex-1 flex-1 shadow-soft min-h-0">
