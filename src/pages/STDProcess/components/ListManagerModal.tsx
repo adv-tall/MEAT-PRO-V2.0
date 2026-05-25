@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom';
 import { LucideIcon } from '../helpers';
 import { DraggableModal } from '../../../components/shared/DraggableModal';
 
-export const ListManagerModal = ({ title, items, onAdd, onRemove, onClose }: any) => {
+export const ListManagerModal = ({ title, items, onAdd, onRemove, onEdit, onClose }: any) => {
     const [newItem, setNewItem] = useState('');
+    const [editingItem, setEditingItem] = useState<string | null>(null);
+    const [editValue, setEditValue] = useState('');
     
     const handleAdd = () => {
         if (!newItem.trim()) return;
@@ -15,6 +17,22 @@ export const ListManagerModal = ({ title, items, onAdd, onRemove, onClose }: any
         }
         onAdd(newItem.trim());
         setNewItem('');
+    };
+
+    const handleSaveEdit = (oldItem: string) => {
+        if (!editValue.trim() || editValue === oldItem) {
+            setEditingItem(null);
+            return;
+        }
+        if (items.includes(editValue.trim())) {
+            const Swal = typeof window !== 'undefined' ? (window as any).Swal : null;
+            if (Swal) Swal.fire({ icon: 'warning', title: 'Duplicate', text: 'This item already exists.', timer: 1500, showConfirmButton: false });
+            return;
+        }
+        if (onEdit) {
+            onEdit(oldItem, editValue.trim());
+        }
+        setEditingItem(null);
     };
 
     return createPortal(
@@ -39,8 +57,25 @@ export const ListManagerModal = ({ title, items, onAdd, onRemove, onClose }: any
                         ) : (
                             items.map((item: string, idx: number) => (
                                 <div key={idx} className="flex justify-between items-center bg-white border border-[#E6E1DB] p-2.5 rounded-lg shadow-sm group hover:border-[#C22D2E]/30 transition-colors">
-                                    <span className="text-[12px] font-bold text-[#2E395F]">{item}</span>
-                                    <button onClick={() => onRemove(item)} className="text-[#737597] hover:text-[#C22D2E] transition-colors p-1 bg-gray-50 rounded-md border border-transparent hover:border-red-100"><LucideIcon name="trash-2" size={14}/></button>
+                                    {editingItem === item ? (
+                                        <input
+                                            type="text"
+                                            value={editValue}
+                                            onChange={(e) => setEditValue(e.target.value)}
+                                            onKeyDown={(e) => { if(e.key === 'Enter') handleSaveEdit(item); }}
+                                            onBlur={() => handleSaveEdit(item)}
+                                            autoFocus
+                                            className="flex-1 border border-[#B2CADE] rounded bg-white px-2 py-1 text-[12px] font-bold outline-none mr-2"
+                                        />
+                                    ) : (
+                                        <span className="text-[12px] font-bold text-[#2E395F] flex-1 truncate">{item}</span>
+                                    )}
+                                    <div className="flex gap-1">
+                                        {editingItem !== item && onEdit && (
+                                            <button onClick={() => { setEditingItem(item); setEditValue(item); }} className="text-[#737597] hover:text-[#DCBC1B] transition-colors p-1 bg-gray-50 rounded-md border border-transparent hover:border-yellow-100"><LucideIcon name="edit-3" size={14}/></button>
+                                        )}
+                                        <button onClick={() => onRemove(item)} className="text-[#737597] hover:text-[#C22D2E] transition-colors p-1 bg-gray-50 rounded-md border border-transparent hover:border-red-100"><LucideIcon name="trash-2" size={14}/></button>
+                                    </div>
                                 </div>
                             ))
                         )}

@@ -11,6 +11,7 @@ interface DraggableModalProps {
   children: React.ReactNode;
   width?: string;
   className?: string;
+  contentClassName?: string;
   icon?: React.ReactNode;
   headerClassName?: string;
 }
@@ -22,6 +23,7 @@ export function DraggableModal({
   children,
   width = 'max-w-2xl',
   className,
+  contentClassName,
   icon,
   headerClassName
 }: DraggableModalProps) {
@@ -57,7 +59,7 @@ export function DraggableModal({
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto">
+              <div className={clsx("flex-1 overflow-y-auto", contentClassName)}>
                 {children}
               </div>
             </div>

@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import UserGuideButton from '../../components/shared/UserGuideButton';
 import { DraggableModal } from '../../components/shared/DraggableModal';
+import { ListManagerModal } from '../STDProcess/components/ListManagerModal';
+import { api } from '../../services/api';
 import { 
   Calendar as CalendarIcon, 
   ChevronLeft, 
@@ -20,7 +22,7 @@ import {
   CalendarDays, 
   Settings, 
   Palmtree,
-  Users
+  Settings2
 } from 'lucide-react';
 
 // --- ERP Palette / Main Theme ---
@@ -61,35 +63,66 @@ const KpiCard = ({ title, val, color, IconComponent, desc }: any) => (
 );
 
 export default function ProCalendar() {
-  const [activeTab, setActiveTab] = useState('calendar'); // 'calendar' | 'list'
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 15)); // Default to March 2026 (matching prompt)
+  const [activeTab, setActiveTab] = useState('calendar');
+  const [currentDate, setCurrentDate] = useState(new Date()); 
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Event Management States
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+  const [modalMode, setModalMode] = useState('create');
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Pagination States for List View
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  // Initial Events with Thai Holidays & Production Schedule
-  const [events, setEvents] = useState([
-    { id: 'HL-001', date: '2026-01-01', title: 'วันขึ้นปีใหม่ (Plant Closed)', time: 'All Day', type: 'Holiday', priority: 'High', status: 'Confirmed', color: 'bg-red-50 text-red-600 border-red-100', isHoliday: true },
-    { id: 'HL-002', date: '2026-04-06', title: 'วันจักรี (Plant Closed)', time: 'All Day', type: 'Holiday', priority: 'High', status: 'Confirmed', color: 'bg-red-50 text-red-600 border-red-100', isHoliday: true },
-    { id: 'HL-003', date: '2026-04-13', title: 'วันสงกรานต์ (Plant Closed)', time: 'All Day', type: 'Holiday', priority: 'High', status: 'Confirmed', color: 'bg-red-50 text-red-600 border-red-100', isHoliday: true },
-    
-    // Production Mock Data
-    { id: 'EV-001', date: '2026-03-09', title: 'Run: Chicken Sausage (Smoked)', time: '06:00', type: 'Production Run', priority: 'High', status: 'Scheduled', color: 'bg-blue-50 text-blue-700 border-blue-100', isHoliday: false },
-    { id: 'EV-002', date: '2026-03-12', title: 'Machine PM: Cutter #2', time: '13:00', type: 'Maintenance', priority: 'Critical', status: 'Confirmed', color: 'bg-emerald-50 text-emerald-700 border-emerald-100', isHoliday: false },
-    { id: 'EV-003', date: '2026-03-15', title: 'Deep Cleaning (Line A)', time: '10:00', type: 'Cleaning', priority: 'Normal', status: 'Scheduled', color: 'bg-amber-50 text-amber-700 border-amber-100', isHoliday: false },
-    { id: 'EV-004', date: '2026-03-18', title: 'GMP/HACCP Audit', time: '08:00', type: 'Audit', priority: 'High', status: 'Confirmed', color: 'bg-purple-50 text-purple-700 border-purple-100', isHoliday: false },
-    { id: 'EV-005', date: '2026-03-20', title: 'Production Sync Meeting', time: '15:30', type: 'Meeting', priority: 'Normal', status: 'Confirmed', color: 'bg-slate-100 text-slate-700 border-slate-200', isHoliday: false },
-  ]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>(['Production Run', 'Maintenance', 'Cleaning', 'Audit', 'Meeting']);
+  const [categoryItems, setCategoryItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [eventsRes, configRes] = await Promise.all([
+        api.post('read', 'ProCalendar'),
+        api.post('read', 'SystemConfig')
+      ]);
+
+      if (eventsRes.status === 'success' && eventsRes.data?.items) {
+        setEvents(eventsRes.data.items);
+      }
+      
+      if (configRes.status === 'success' && configRes.data?.items) {
+          const loadedCats = configRes.data.items
+             .filter((item: any) => item.category === 'Event Category');
+          setCategoryItems(loadedCats);
+          if (loadedCats.length > 0) setCategories(loadedCats.map((item: any) => item.value));
+      }
+    } catch (err) {
+      console.error('Error fetching calendar data', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+        case 'Production Run': return 'bg-blue-50 text-blue-700 border-blue-100';
+        case 'Maintenance': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+        case 'Cleaning': return 'bg-amber-50 text-amber-700 border-amber-100';
+        case 'Audit': return 'bg-purple-50 text-purple-700 border-purple-100';
+        case 'Meeting': return 'bg-slate-100 text-slate-700 border-slate-200';
+        case 'Holiday': return 'bg-red-50 text-red-600 border-red-100';
+        default: return 'bg-slate-50 text-slate-700 border-slate-100';
+    }
+  };
 
   const [eventForm, setEventForm] = useState({
-    id: '', date: '', title: '', time: '', type: 'Production Run', priority: 'Normal', status: 'Scheduled', isHoliday: false
+    id: '', date: '', title: '', time: '', type: 'Production Run', priority: 'Normal', status: 'Scheduled'
   });
 
   const daysOfWeek = [
@@ -151,47 +184,67 @@ export default function ProCalendar() {
     if (mode === 'create') {
       const isHolidays = type === 'Holiday';
       setEventForm({
-        id: isHolidays ? `HL-${String(events.length + 1).padStart(3, '0')}` : `EV-${String(events.length + 1).padStart(3, '0')}`,
+        id: '', // removed logic `isHolidays ? ...` because backend handles unique id
         date: data?.dateStr || new Date().toISOString().split('T')[0],
         title: '',
         time: isHolidays ? 'All Day' : '10:00',
-        type: isHolidays ? 'Holiday' : 'Production Run',
+        type: isHolidays ? 'Holiday' : (categories.includes('Production Run') ? 'Production Run' : categories[0] || 'Meeting'),
         priority: isHolidays ? 'High' : 'Normal',
-        status: 'Scheduled',
-        isHoliday: isHolidays
+        status: 'Scheduled'
       });
     } else {
-      const cleanedTitle = data.title.replace(/^\\*/, '');
+      const cleanedTitle = data.title.replace(/^\*/, '');
       setEventForm({ ...data, title: cleanedTitle });
     }
     setIsModalOpen(true);
   };
 
-  const handleSaveEvent = () => {
+  const handleSaveEvent = async () => {
     if (!eventForm.title || !eventForm.date) return;
-    const processedTitle = eventForm.title.replace(/^\\*/, '');
-    const typeColors: Record<string, string> = {
-      'Production Run': 'bg-blue-50 text-blue-700 border-blue-100',
-      'Maintenance': 'bg-emerald-50 text-emerald-700 border-emerald-100',
-      'Cleaning': 'bg-amber-50 text-amber-700 border-amber-100',
-      'Audit': 'bg-purple-50 text-purple-700 border-purple-100',
-      'Meeting': 'bg-slate-100 text-slate-700 border-slate-200',
-      'Holiday': 'bg-red-50 text-red-600 border-red-100'
+    const processedTitle = eventForm.title.replace(/^\*/, '');
+    
+    // Add missing fields for the sheet
+    const submitData = {
+      ...eventForm,
+      title: processedTitle,
+      id: modalMode === 'create' ? `EV-${Date.now()}` : eventForm.id,
+      createdAt: eventForm.id ? undefined : new Date().toISOString()
     };
-    if (modalMode === 'create') {
-      const newEntry = { 
-        ...eventForm, title: processedTitle, color: typeColors[eventForm.type] || 'bg-slate-50 text-slate-700 border-slate-100' 
-      };
-      setEvents([...events, newEntry]);
-    } else {
-      setEvents(events.map(e => e.id === eventForm.id ? { ...eventForm, title: processedTitle, color: typeColors[eventForm.type] } : e));
+
+    try {
+      const res = await api.post(modalMode === 'create' ? 'write' : 'update', 'ProCalendar', submitData);
+      if (res.status === 'success') {
+          // Fetch again to ensure consistency or just update local
+          if (modalMode === 'create') {
+            setEvents([...events, submitData]);
+          } else {
+            setEvents(events.map(e => e.id === submitData.id ? submitData : e));
+          }
+          setIsModalOpen(false);
+          const Swal = typeof window !== 'undefined' ? (window as any).Swal : null;
+          if (Swal) Swal.fire({ icon: 'success', title: 'Saved successfully!', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+      } else {
+          alert('Failed to save event: ' + res.message);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error saving data');
     }
-    setIsModalOpen(false);
   };
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
     if (window.confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
-      setEvents(events.filter(e => e.id !== id));
+      try {
+        const res = await api.post('delete', 'ProCalendar', { id });
+        if (res.status === 'success') {
+            setEvents(events.filter(e => e.id !== id));
+        } else {
+            alert('Failed to delete: ' + res.message);
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Error deleting data');
+      }
     }
   };
 
@@ -239,8 +292,8 @@ export default function ProCalendar() {
 
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 shrink-0">
-            <KpiCard title="Prod Orders" val={filteredEvents.filter(e=>!e.isHoliday).length} color={palette.teal} IconComponent={LayoutGrid} desc="Active Runs" />
-            <KpiCard title="Plant Holidays" val={events.filter(e=>e.isHoliday && new Date(e.date) >= new Date()).length} color={palette.accent} IconComponent={Palmtree} desc="Line Stoppages" />
+            <KpiCard title="Prod Orders" val={filteredEvents.filter(e=>e.type !== 'Holiday').length} color={palette.teal} IconComponent={LayoutGrid} desc="Active Runs" />
+            <KpiCard title="Plant Holidays" val={events.filter(e=>e.type === 'Holiday' && new Date(e.date) >= new Date()).length} color={palette.accent} IconComponent={Palmtree} desc="Line Stoppages" />
             <KpiCard title="Maintenance" val={events.filter(e=>e.type==='Maintenance').length} color={palette.gold} IconComponent={Settings} desc="PM & Fixes" />
             <KpiCard title="Scheduled Tasks" val={filteredEvents.length} color="#16A34A" IconComponent={CalendarDays} desc="This Month" />
         </div>
@@ -300,9 +353,9 @@ export default function ProCalendar() {
                             </div>
                             <div className="space-y-1 overflow-y-auto max-h-[85px] custom-scrollbar pb-6">
                               {dayEvents.map((ev, i) => (
-                                <div key={i} title={ev.title.replace(/^\\*/, '')} onClick={() => openEventModal('edit', ev)} className={`px-2 py-1 rounded-sm text-[9px] font-bold border shadow-sm cursor-pointer hover:scale-[1.02] transition-all flex items-center gap-1 ${ev.color} overflow-hidden`}>
-                                  {ev.isHoliday && <Palmtree size={10} className="shrink-0" />}
-                                  <span className="truncate">{ev.title.replace(/^\\*/, '')}</span>
+                                <div key={i} title={ev.title.replace(/^\*/, '')} onClick={() => openEventModal('edit', ev)} className={`px-2 py-1 rounded-sm text-[9px] font-bold border shadow-sm cursor-pointer hover:scale-[1.02] transition-all flex items-center gap-1 ${getTypeColor(ev.type)} overflow-hidden`}>
+                                  {ev.type === 'Holiday' && <Palmtree size={10} className="shrink-0" />}
+                                  <span className="truncate">{ev.title.replace(/^\*/, '')}</span>
                                 </div>
                               ))}
                             </div>
@@ -344,13 +397,13 @@ export default function ProCalendar() {
                           </div>
                         </td>
                         <td className="px-6 py-3 border-b border-[#4F868C]/5 text-[12px] text-[#141A26] font-medium align-middle">
-                          <div className={`flex items-center gap-2 font-black uppercase tracking-tight ${ev.isHoliday ? 'text-[#D91604]' : 'text-[#141A26]'}`}>
-                            {ev.isHoliday && <Palmtree size={14} className="text-[#D91604]" />}
-                            {ev.title.replace(/^\\*/, '')}
+                          <div className={`flex items-center gap-2 font-black uppercase tracking-tight ${ev.type === 'Holiday' ? 'text-[#D91604]' : 'text-[#141A26]'}`}>
+                            {ev.type === 'Holiday' && <Palmtree size={14} className="text-[#D91604]" />}
+                            {ev.title.replace(/^\*/, '')}
                           </div>
                         </td>
                         <td className="px-6 py-3 border-b border-[#4F868C]/5 text-[12px] text-[#141A26] font-medium align-middle">
-                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-[0.1em] shadow-sm inline-block ${ev.color}`}>
+                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-[0.1em] shadow-sm inline-block ${getTypeColor(ev.type)}`}>
                             {ev.type}
                           </span>
                         </td>
@@ -399,15 +452,16 @@ export default function ProCalendar() {
       <DraggableModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={modalMode === 'create' ? (eventForm.isHoliday ? 'New Holiday' : 'Create Event') : 'Modify Entry'}
-        icon={eventForm.isHoliday ? <Palmtree size={16} className="text-[#D91604]" /> : <CalendarDays size={16} className="text-[#F2B705]" />}
+        title={modalMode === 'create' ? (eventForm.type === 'Holiday' ? 'New Holiday' : 'Create Event') : 'Modify Entry'}
+        icon={eventForm.type === 'Holiday' ? <Palmtree size={16} className="text-[#D91604]" /> : <CalendarDays size={16} className="text-[#F2B705]" />}
         className="w-full max-w-xl"
         headerClassName="bg-[#141A26] text-white border-t-[8px] border-[#F2B705]"
+        contentClassName="p-6"
       >
         <div className="space-y-6 font-sans">
             <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-[#141A26] uppercase tracking-widest block mb-2">{eventForm.isHoliday ? 'Holiday Name' : 'Event Description'}</label>
-                <input value={eventForm.title} onChange={e=>setEventForm({...eventForm, title: e.target.value})} className="w-full border-b-2 border-[#4F868C]/20 bg-transparent py-2 text-sm font-bold text-[#141A26] focus:border-[#F2B705] outline-none transition-colors" placeholder={eventForm.isHoliday ? "ระบุชื่อวันสำคัญ..." : "Interview, Onboarding, Training..."} />
+                <label className="text-[10px] font-black text-[#141A26] uppercase tracking-widest block mb-2">{eventForm.type === 'Holiday' ? 'Holiday Name' : 'Event Description'}</label>
+                <input value={eventForm.title} onChange={e=>setEventForm({...eventForm, title: e.target.value})} className="w-full border-b-2 border-[#4F868C]/20 bg-transparent py-2 text-sm font-bold text-[#141A26] focus:border-[#F2B705] outline-none transition-colors" placeholder={eventForm.type === 'Holiday' ? "ระบุชื่อวันสำคัญ..." : "Interview, Onboarding, Training..."} />
             </div>
 
             <div className="grid grid-cols-2 gap-6">
@@ -415,7 +469,7 @@ export default function ProCalendar() {
                     <label className="text-[10px] font-black text-[#141A26] uppercase tracking-widest block mb-2">Date</label>
                     <input type="date" value={eventForm.date} onChange={e=>setEventForm({...eventForm, date: e.target.value})} className="w-full border-b-2 border-[#4F868C]/20 bg-transparent py-1.5 text-sm font-bold text-[#141A26] focus:border-[#F2B705] outline-none transition-colors" />
                 </div>
-                {!eventForm.isHoliday && (
+                {eventForm.type !== 'Holiday' && (
                   <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-[#141A26] uppercase tracking-widest block mb-2">Time</label>
                       <div className="relative">
@@ -426,12 +480,17 @@ export default function ProCalendar() {
                 )}
             </div>
 
-            {!eventForm.isHoliday && (
+            {eventForm.type !== 'Holiday' && (
               <div className="grid grid-cols-3 gap-6">
-                  <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-[#141A26] uppercase tracking-widest block mb-2">Category</label>
+                  <div className="space-y-1.5 relative">
+                      <label className="text-[10px] font-black text-[#141A26] uppercase tracking-widest block mb-2 flex justify-between items-center">
+                        Category
+                        <button onClick={() => setIsConfigOpen(true)} className="text-[#4F868C] hover:text-[#D91604]"><Settings2 size={12} /></button>
+                      </label>
                       <select value={eventForm.type} onChange={e=>setEventForm({...eventForm, type: e.target.value})} className="w-full border-b-2 border-[#4F868C]/20 bg-transparent py-1.5 text-xs font-bold text-[#141A26] outline-none cursor-pointer focus:border-[#F2B705] transition-colors">
-                        <option>Production Run</option><option>Maintenance</option><option>Cleaning</option><option>Audit</option><option>Meeting</option>
+                        {categories.map((cat, i) => (
+                           <option key={i}>{cat}</option>
+                        ))}
                       </select>
                   </div>
                   <div className="space-y-1.5">
@@ -452,11 +511,56 @@ export default function ProCalendar() {
 
         <div className="mt-8 pt-4 border-t border-[#4F868C]/10 flex justify-end gap-3 font-mono">
             <button onClick={()=>setIsModalOpen(false)} className="px-6 py-2.5 text-[#4F868C] font-black uppercase text-[10px] hover:text-[#141A26] transition-colors">Cancel</button>
-            <button onClick={handleSaveEvent} className={`px-10 py-3 rounded-2xl font-black uppercase text-[10px] shadow-md hover:scale-[1.02] transition-all flex items-center gap-2 ${eventForm.isHoliday ? 'bg-[#D91604]' : 'bg-[#141A26]'} text-white`}>
-                <Save size={16} className={`${eventForm.isHoliday ? 'text-white' : 'text-[#F2B705]'}`} /> Save Entry
+            <button onClick={handleSaveEvent} className={`px-10 py-3 rounded-2xl font-black uppercase text-[10px] shadow-md hover:scale-[1.02] transition-all flex items-center gap-2 ${eventForm.type === 'Holiday' ? 'bg-[#D91604]' : 'bg-[#141A26]'} text-white`}>
+                <Save size={16} className={`${eventForm.type === 'Holiday' ? 'text-white' : 'text-[#F2B705]'}`} /> Save Entry
             </button>
         </div>
       </DraggableModal>
+
+      {/* List Manager Modal for Config */}
+      {isConfigOpen && (
+          <ListManagerModal
+              title="Manage Categories"
+              items={categories}
+              onAdd={async (newItem: string) => {
+                  try {
+                      // Attempt to save to SystemConfig
+                      const newId = `CAT-${Date.now()}`;
+                      const fullItem = { id: newId, category: 'Event Category', value: newItem, description: 'Added from ProCalendar' };
+                      await api.post('write', 'SystemConfig', fullItem);
+                      setCategoryItems([...categoryItems, fullItem]);
+                      setCategories([...categories, newItem]);
+                  } catch (e) {
+                      console.error("Failed to add category", e);
+                  }
+              }}
+              onEdit={async (oldItem: string, newItem: string) => {
+                  try {
+                      const itemObj = categoryItems.find(c => c.value === oldItem);
+                      if (itemObj && itemObj.id) {
+                          await api.post('update', 'SystemConfig', { ...itemObj, value: newItem });
+                          setCategoryItems(categoryItems.map(c => c.id === itemObj.id ? { ...c, value: newItem } : c));
+                      }
+                      setCategories(categories.map(c => c === oldItem ? newItem : c));
+                  } catch (e) {
+                      console.error("Failed to edit category", e);
+                  }
+              }}
+              onRemove={async (itemToRemove: string) => {
+                  try {
+                      const itemObj = categoryItems.find(c => c.value === itemToRemove);
+                      if (itemObj && itemObj.id) {
+                          await api.post('delete', 'SystemConfig', { id: itemObj.id });
+                          setCategoryItems(categoryItems.filter(c => c.id !== itemObj.id));
+                      }
+                      setCategories(categories.filter(c => c !== itemToRemove));
+                  } catch (e) {
+                      console.error("Failed to remove category", e);
+                  }
+              }}
+              onClose={() => setIsConfigOpen(false)}
+          />
+      )}
 
       {/* User Guide Drawer */}
       {isGuideOpen && (

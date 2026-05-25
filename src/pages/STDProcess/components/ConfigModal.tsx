@@ -411,6 +411,7 @@ export function ConfigModal({ isOpen, onClose, data, onSave, mode, categories }:
                     items={options[(settingsMode.key) as keyof typeof options] || []} 
                     onAdd={(val: string) => handleUpdateOption(settingsMode.key, [...(options[(settingsMode.key) as keyof typeof options] || []), val])}
                     onRemove={(val: string) => handleUpdateOption(settingsMode.key, (options[(settingsMode.key) as keyof typeof options] || []).filter(i => i !== val))}
+                    onEdit={(oldVal: string, newVal: string) => handleUpdateOption(settingsMode.key, (options[(settingsMode.key) as keyof typeof options] || []).map(i => i === oldVal ? newVal : i))}
                     onClose={() => setSettingsMode(null)} 
                 />
             )}

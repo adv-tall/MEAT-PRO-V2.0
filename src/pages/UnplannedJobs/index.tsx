@@ -154,6 +154,7 @@ export default function UnplannedJobs() {
                 onClose={() => setIsReportOpen(false)}
                 title="REPORT DAILY PROBLEM"
                 width="600px"
+                contentClassName="p-6"
             >
                 <div className="space-y-4">
                     <div>
