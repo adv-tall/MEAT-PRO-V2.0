@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { ApiResponse } from '../types';
 
-const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || '';
+const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyEeAJUDX7JQLzaKniT94D9m8H-DSYxxjAMQO-vO0dh2Cs9tBdUnA96MphH0D0lX7fkYg/exec';
 
 // Output setup status for easy debugging
 console.log('App initialization - GAS Backend URL configured:', !!SCRIPT_URL);

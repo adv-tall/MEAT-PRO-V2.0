@@ -72,6 +72,7 @@ export default function ProCalendar() {
   const [modalMode, setModalMode] = useState('create');
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -92,8 +93,9 @@ export default function ProCalendar() {
         api.post('read', 'SystemConfig')
       ]);
 
+      let fetchedEvents: any[] = [];
       if (eventsRes.status === 'success' && eventsRes.data?.items) {
-        setEvents(eventsRes.data.items);
+        fetchedEvents = eventsRes.data.items;
       }
       
       if (configRes.status === 'success' && configRes.data?.items) {
@@ -101,7 +103,47 @@ export default function ProCalendar() {
              .filter((item: any) => item.category === 'Event Category');
           setCategoryItems(loadedCats);
           if (loadedCats.length > 0) setCategories(loadedCats.map((item: any) => item.value));
+
+          const dbHolidays = configRes.data.items.filter((item: any) => item.category === 'AnnualHoliday');
+          const fixedHolidays = [
+            { value: '01-01', description: 'วันขึ้นปีใหม่' },
+            { value: '03-03', description: 'วันมาฆบูชา' },
+            { value: '04-13', description: 'วันสงกรานต์' },
+            { value: '04-14', description: 'วันสงกรานต์' },
+            { value: '04-15', description: 'วันสงกรานต์' },
+            { value: '05-01', description: 'วันแรงงานแห่งชาติ' },
+            { value: '06-03', description: 'วันเฉลิมพระชนมพรรษา สมเด็จพระนางเจ้าสุทิดาฯ' },
+            { value: '07-28', description: 'วันเฉลิมพระชนมพรรษา รัชกาลที่ 10' },
+            { value: '08-12', description: 'วันแม่แห่งชาติ' },
+            { value: '10-13', description: 'วันหยุดชดเชย วันนวมินทรมหาราช' },
+            { value: '10-23', description: 'วันปิยมหาราช' },
+            { value: '12-05', description: 'วันพ่อแห่งชาติ' },
+            { value: '12-31', description: 'วันสิ้นปี' }
+          ];
+          
+          // Combine fixed and db holidays
+          const holidays = [...fixedHolidays, ...dbHolidays];
+
+          if (holidays.length > 0) {
+              const currentYear = new Date().getFullYear();
+              const years = [currentYear - 1, currentYear, currentYear + 1];
+              const dynamicHolidays = years.flatMap(year => 
+                  holidays.map((h: any) => ({
+                      id: `DYN-HOL-${year}-${h.value}`,
+                      date: `${year}-${h.value}`,
+                      title: h.description,
+                      time: 'All Day',
+                      type: 'Holiday',
+                      priority: 'High',
+                      status: 'Confirmed'
+                  }))
+              );
+              // avoid duplicate keys or mixed arrays
+              fetchedEvents = [...fetchedEvents, ...dynamicHolidays];
+          }
       }
+      
+      setEvents(fetchedEvents);
     } catch (err) {
       console.error('Error fetching calendar data', err);
     } finally {
@@ -200,7 +242,9 @@ export default function ProCalendar() {
   };
 
   const handleSaveEvent = async () => {
+    if (isSaving) return;
     if (!eventForm.title || !eventForm.date) return;
+    setIsSaving(true);
     const processedTitle = eventForm.title.replace(/^\*/, '');
     
     // Add missing fields for the sheet
@@ -229,6 +273,8 @@ export default function ProCalendar() {
     } catch (e) {
       console.error(e);
       alert('Error saving data');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -510,9 +556,10 @@ export default function ProCalendar() {
         </div>
 
         <div className="mt-8 pt-4 border-t border-[#4F868C]/10 flex justify-end gap-3 font-mono">
-            <button onClick={()=>setIsModalOpen(false)} className="px-6 py-2.5 text-[#4F868C] font-black uppercase text-[10px] hover:text-[#141A26] transition-colors">Cancel</button>
-            <button onClick={handleSaveEvent} className={`px-10 py-3 rounded-2xl font-black uppercase text-[10px] shadow-md hover:scale-[1.02] transition-all flex items-center gap-2 ${eventForm.type === 'Holiday' ? 'bg-[#D91604]' : 'bg-[#141A26]'} text-white`}>
-                <Save size={16} className={`${eventForm.type === 'Holiday' ? 'text-white' : 'text-[#F2B705]'}`} /> Save Entry
+            <button onClick={()=>setIsModalOpen(false)} className="px-6 py-2.5 text-[#4F868C] font-black uppercase text-[10px] hover:text-[#141A26] transition-colors" disabled={isSaving}>Cancel</button>
+            <button onClick={handleSaveEvent} disabled={isSaving} className={`px-10 py-3 rounded-2xl font-black uppercase text-[10px] shadow-md hover:scale-[1.02] transition-all flex items-center gap-2 ${eventForm.type === 'Holiday' ? 'bg-[#D91604]' : 'bg-[#141A26]'} text-white opacity-${isSaving ? '50' : '100'}`}>
+                {isSaving ? <span className="animate-spin mr-1 border-t-2 border-l-2 border-white w-4 h-4 rounded-full"></span> : <Save size={16} className={`${eventForm.type === 'Holiday' ? 'text-white' : 'text-[#F2B705]'}`} />}
+                {isSaving ? 'Saving...' : 'Save Entry'}
             </button>
         </div>
       </DraggableModal>
@@ -580,16 +627,23 @@ export default function ProCalendar() {
                     <section>
                       <h4 className="font-black text-[#141A26] border-b border-[#4F868C]/10 pb-2 mb-4 flex items-center gap-2 font-mono uppercase tracking-widest text-sm">
                         <span className="bg-[#141A26] text-white w-5 h-5 rounded flex items-center justify-center text-[10px]">1</span> 
-                        Production Events
+                        เพิ่มกิจกรรม (Events)
                       </h4>
-                      <p className="text-[13px] leading-relaxed">Click "Add Event" to schedule production runs, PM task, cleaning or audits. Colors automatically match category.</p>
+                      <p className="text-[13px] leading-relaxed">คลิกที่ "ADD EVENT" เพื่อกำหนดตารางผลิต, การซ่อมบำรุง, การทำความสะอาด หรือนัดหมายต่างๆ สีของแต่ละรายการจะเปลี่ยนไปตามประเภท (Category) โดยอัตโนมัติ</p>
                     </section>
                     <section>
                       <h4 className="font-black text-[#141A26] border-b border-[#4F868C]/10 pb-2 mb-4 flex items-center gap-2 font-mono uppercase tracking-widest text-sm">
                         <span className="bg-[#D91604] text-white w-5 h-5 rounded flex items-center justify-center text-[10px]">2</span> 
-                        Plant Holidays
+                        วันหยุดโรงงาน (Holidays)
                       </h4>
-                      <p className="text-[13px] leading-relaxed">Use "Add Holiday" to register company-wide plant closures or national holidays. Represents with a <b className="text-[#D91604]">Palm Tree</b> icon.</p>
+                      <p className="text-[13px] leading-relaxed">วันหยุดประจำปีของบริษัทจะถูกแสดงด้วยไอคอน <b className="text-[#D91604]">ต้นปาล์ม (Palm Tree)</b> โดยระบบจะทำการคำนวณและเพิ่มวันหยุดมาตรฐานเหล่านี้ให้ในทุกๆ ปีโดยอัตโนมัติ นอกจากนี้คุณยังสามารถเพิ่มวันหยุดพิเศษเองได้ผ่านปุ่ม "ADD HOLIDAY"</p>
+                    </section>
+                    <section>
+                      <h4 className="font-black text-[#141A26] border-b border-[#4F868C]/10 pb-2 mb-4 flex items-center gap-2 font-mono uppercase tracking-widest text-sm">
+                        <span className="bg-[#4F868C] text-white w-5 h-5 rounded flex items-center justify-center text-[10px]">3</span> 
+                        จัดการหมวดหมู่
+                      </h4>
+                      <p className="text-[13px] leading-relaxed">ในหน้าเพิ่มกิจกรรม คุณสามารถคลิกที่ไอคอนรูปฟันเฟือง (Settings) เพื่อเพิ่ม แทรก แก้ไข หรือลบหมวดหมู่ของกิจกรรมที่ใช้ในโรงงานได้เองเลย</p>
                     </section>
                 </div>
                 <div className="p-6 bg-white shrink-0 flex justify-end border-t border-[#4F868C]/10">
